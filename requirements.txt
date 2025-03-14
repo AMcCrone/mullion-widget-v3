@@ -7,4 +7,3 @@ kaleido
 reportlab
 PyPDF2
 sectionproperties
-sectionproperties.pre.sections
