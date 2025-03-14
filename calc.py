@@ -249,6 +249,9 @@ def generate_section_database(
     wind_pressure, bay_width, mullion_length, selected_barrier_load, SLS_case, defl_limit, Z_req_cm3
 ):
     from config import BARRIER_LENGTH, material_props, TT_MidBlue, TT_Grey
+    import pandas as pd
+    import numpy as np
+    
     df_mat = df_selected[(df_selected["Material"] == plot_material) &
                          (df_selected["Supplier"].isin(selected_suppliers))].copy()
     df_mat.reset_index(drop=True, inplace=True)
@@ -303,30 +306,37 @@ def generate_section_database(
     df_display["ULS Util. (%)"] = (df_display["ULS Utilisation"] * 100).round(1)
     df_display["SLS Util. (%)"] = (df_display["SLS Utilisation"] * 100).round(1)
     
-    # Add styling information
-    df_display["Color"] = TT_Grey  # Default color for failing sections
-    
-    # Create color gradient for passing sections
-    if len(df_pass) > 0:
-        # Convert TT_MidBlue and TT_Grey to RGB tuples
-        mid_blue = tuple(map(int, TT_MidBlue.replace("rgb(", "").replace(")", "").split(",")))
-        grey = tuple(map(int, TT_Grey.replace("rgb(", "").replace(")", "").split(",")))
-        
-        # Calculate gradient steps
-        n_pass = len(df_pass)
-        colors = []
-        for i in range(n_pass):
-            ratio = i / max(1, n_pass - 1)  # Avoid division by zero
-            r = int(mid_blue[0] + (grey[0] - mid_blue[0]) * ratio)
-            g = int(mid_blue[1] + (grey[1] - mid_blue[1]) * ratio)
-            b = int(mid_blue[2] + (grey[2] - mid_blue[2]) * ratio)
-            colors.append(f"rgb({r},{g},{b})")
-        
-        # Assign colors to passing sections
-        df_display.loc[df_display["Max Utilisation"] <= 1.0, "Color"] = colors
-    
     display_columns = ["Supplier", "Profile Name", "Depth", "Section Modulus (cm³)", "I (cm⁴)", 
-                       "ULS Util. (%)", "SLS Util. (%)", "Color"]
+                       "ULS Util. (%)", "SLS Util. (%)"]
     df_display = df_display[display_columns]
     
-    return df_display
+    # Create a styled dataframe for display
+    def style_dataframe(dataframe):
+        # Count passing sections for gradient calculation
+        pass_count = len(df_pass)
+        
+        # Define the style function for each row
+        def row_style(row):
+            # Check if row is passing or failing
+            if row.name < pass_count:
+                # Create gradient for passing sections
+                ratio = row.name / max(1, pass_count - 1)  # Avoid division by zero
+                mid_blue = tuple(int(x) for x in TT_MidBlue.replace("rgb(", "").replace(")", "").split(","))
+                grey = tuple(int(x) for x in TT_Grey.replace("rgb(", "").replace(")", "").split(","))
+                
+                r = int(mid_blue[0] + (grey[0] - mid_blue[0]) * ratio)
+                g = int(mid_blue[1] + (grey[1] - mid_blue[1]) * ratio)
+                b = int(mid_blue[2] + (grey[2] - mid_blue[2]) * ratio)
+                
+                return ['background-color: rgb({},{},{})'.format(r, g, b)] * len(row)
+            else:
+                # Failing sections get grey color
+                return ['background-color: {}'.format(TT_Grey)] * len(row)
+        
+        # Apply the styling
+        return dataframe.style.apply(row_style, axis=1)
+    
+    # Apply styling to the dataframe
+    styled_df = style_dataframe(df_display)
+    
+    return styled_df
