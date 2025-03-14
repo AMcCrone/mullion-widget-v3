@@ -248,7 +248,7 @@ def generate_section_database(
     df_selected, plot_material, selected_suppliers, custom_section_data, use_custom_section,
     wind_pressure, bay_width, mullion_length, selected_barrier_load, SLS_case, defl_limit, Z_req_cm3
 ):
-    from config import BARRIER_LENGTH, material_props, TT_MidBlue, TT_Grey
+    from config import BARRIER_LENGTH, material_props, TT_LightLightBlue, TT_LightGrey
     import pandas as pd
     import numpy as np
     
@@ -321,17 +321,17 @@ def generate_section_database(
             if row.name < pass_count:
                 # Create gradient for passing sections
                 ratio = row.name / max(1, pass_count - 1)  # Avoid division by zero
-                mid_blue = tuple(int(x) for x in TT_LightBlue.replace("rgb(", "").replace(")", "").split(","))
-                grey = tuple(int(x) for x in TT_Grey.replace("rgb(", "").replace(")", "").split(","))
+                lightlight_blue = tuple(int(x) for x in TT_LightLightBlue.replace("rgb(", "").replace(")", "").split(","))
+                lightgrey = tuple(int(x) for x in TT_LightGrey.replace("rgb(", "").replace(")", "").split(","))
                 
-                r = int(mid_blue[0] + (grey[0] - mid_blue[0]) * ratio)
-                g = int(mid_blue[1] + (grey[1] - mid_blue[1]) * ratio)
-                b = int(mid_blue[2] + (grey[2] - mid_blue[2]) * ratio)
+                r = int(lightlight_blue[0] + (lightgrey[0] - lightlight_blue[0]) * ratio)
+                g = int(lightlight_blue[1] + (lightgrey[1] - lightlight_blue[1]) * ratio)
+                b = int(lightlight_blue[2] + (lightgrey[2] - lightlight_blue[2]) * ratio)
                 
                 return ['background-color: rgb({},{},{})'.format(r, g, b)] * len(row)
             else:
                 # Failing sections get grey color
-                return ['background-color: {}'.format(TT_Grey)] * len(row)
+                return ['background-color: {}'.format(TT_LightGrey)] * len(row)
         
         # Apply the styling
         return dataframe.style.apply(row_style, axis=1)
