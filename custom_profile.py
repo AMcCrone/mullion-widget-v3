@@ -1,7 +1,7 @@
 import streamlit as st
 import tempfile
 import os
-from sectionproperties.pre import read_dxf
+from sectionproperties.pre.sections import read_dxf
 
 def get_custom_profile():
     st.subheader("Custom Profile Settings")
