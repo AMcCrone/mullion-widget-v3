@@ -67,26 +67,26 @@ wind_pressure = st.sidebar.slider("Wind Pressure (kPa)", 0.1, 5.0, 1.0, 0.1)
 bay_width = st.sidebar.slider("Bay Width (mm)", 500, 10000, 3000, 250)
 mullion_length = st.sidebar.slider("Mullion Length (mm)", 2500, 12000, 4000, 250)
 
-# Custom Section Controls
-st.header("Custom Profile Settings")
-custom_option = st.selectbox("Select Custom Profile Option", ["None", "Manual Input", "Import DXF"])
-custom_section_data = {}
-if custom_option == "Manual Input":
-    custom_section_data = {
-        "type": "manual",
-        "name": st.text_input("Profile Name", value="Custom Profile"),
-        "depth": st.number_input("Section Depth (mm)", min_value=50.0, max_value=500.0, value=150.0, step=1.0),
-        "Z": st.number_input("Section Modulus (cm³)", min_value=1.0, max_value=1000.0, value=50.0, step=1.0),
-        "I": st.number_input("Moment of Inertia (cm⁴)", min_value=1.0, max_value=10000.0, value=500.0, step=1.0)
-    }
-elif custom_option == "Import DXF":
-    # This function (from custom_profile.py) handles file upload and property extraction.
-    from custom_profile import get_custom_profile
-    custom_section_data = get_custom_profile()
+with st.expander("Custom Profile Settings", expanded=False):
+    custom_option = st.selectbox("Select Custom Profile Option", ["None", "Manual Input", "Import DXF"])
+    custom_section_data = {}
+    if custom_option == "Manual Input":
+        col1, col2, col3, col4 = st.columns(4)
+        with col1:
+            name = st.text_input("Profile Name", value="Custom Profile")
+        with col2:
+            depth = st.number_input("Section Depth (mm)", min_value=50.0, max_value=500.0, value=150.0, step=1.0)
+        with col3:
+            Z = st.number_input("Section Modulus (cm³)", min_value=1.0, max_value=1000.0, value=50.0, step=1.0)
+        with col4:
+            I = st.number_input("Moment of Inertia (cm⁴)", min_value=1.0, max_value=10000.0, value=500.0, step=1.0)
+        custom_section_data = {"type": "manual", "name": name, "depth": depth, "Z": Z, "I": I}
+    elif custom_option == "Import DXF":
+        from custom_profile import get_custom_profile
+        custom_section_data = get_custom_profile()
 
-# Custom profile option (moved from the sidebar)
-custom_profile_data = get_custom_profile()
-use_custom_section = custom_profile_data.get("type") in ["manual", "dxf"]
+use_custom_section = custom_section_data.get("type") in ["manual", "dxf"]
+
 
 
 # ---------------------------
