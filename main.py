@@ -5,7 +5,7 @@ import io
 
 from auth import authenticate_user
 from config import set_page_config, material_props
-from calculations import generate_plots, generate_section_database
+from calc import generate_plots, generate_section_database
 from pdf_export import get_pdf_bytes
 from documentation import render_documentation
 
