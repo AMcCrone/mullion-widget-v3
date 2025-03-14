@@ -6,4 +6,4 @@ openpyxl
 kaleido
 reportlab
 PyPDF2
-sectionproperties==3.8.0
+sectionproperties
