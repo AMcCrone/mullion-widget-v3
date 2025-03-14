@@ -54,17 +54,16 @@ def generate_plots(
     available_cm3 = Wyy_vals / 1000  # Convert to cm³
 
     # Add custom section if enabled
-if use_custom_section and custom_section_data:
-    depths = np.append(depths, custom_section_data["depth"])
-    # Use custom_section_data["Z"] instead of "modulus"
-    Wyy_vals = np.append(Wyy_vals, custom_section_data["Z"] * 1000)  # cm³ -> mm³
-    Iyy_vals = np.append(Iyy_vals, custom_section_data["I"] * 10000)   # cm⁴ -> mm⁴
-    profiles = np.append(profiles, custom_section_data["name"])
-    # Remove the reinforced part; set a default value (e.g., True) for plotting symbols
-    reinf = np.append(reinf, True)
-    # Set supplier as "Custom"
-    supps = np.append(supps, "Custom")
-    available_cm3 = np.append(available_cm3, custom_section_data["Z"])
+    if use_custom_section and custom_section_data:
+        depths = np.append(depths, custom_section_data["depth"])
+        # Use custom_section_data["Z"] instead of "modulus"
+        Wyy_vals = np.append(Wyy_vals, custom_section_data["Z"] * 1000)  # cm³ -> mm³
+        Iyy_vals = np.append(Iyy_vals, custom_section_data["I"] * 10000)   # cm⁴ -> mm⁴
+        profiles = np.append(profiles, custom_section_data["name"])
+        # Set a default reinforcement flag (e.g., True) and supplier "Custom"
+        reinf = np.append(reinf, True)
+        supps = np.append(supps, "Custom")
+        available_cm3 = np.append(available_cm3, custom_section_data["Z"])
 
     # ----- ULS Plot -----
     uls_passed = available_cm3 >= Z_req_cm3
@@ -245,7 +244,8 @@ if use_custom_section and custom_section_data:
         camera = dict(eye=dict(x=0, y=2.5, z=0), projection=dict(type='orthographic'))
     util_fig.update_layout(scene_camera=camera)
     
-return uls_fig, sls_fig, util_fig, defl_values, Z_req_cm3, defl_limit
+    return uls_fig, sls_fig, util_fig, defl_values, Z_req_cm3, defl_limit
+
 
 def generate_section_database(
     df_selected, plot_material, selected_suppliers, custom_section_data, use_custom_section,
