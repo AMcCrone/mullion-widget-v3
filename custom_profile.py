@@ -1,7 +1,7 @@
 import streamlit as st
 import tempfile
 import os
-from sectionproperties.pre.sections import read_dxf
+from sectionproperties.sections import SectionFromDxf
 
 def get_custom_profile():
     st.subheader("Custom Profile Settings")
@@ -25,10 +25,12 @@ def get_custom_profile():
                 tmp_filename = tmp_file.name
             try:
                 # Use sectionproperties to import and mesh the DXF geometry.
-                section = read_dxf(tmp_filename, scale=1.0, tol=1e-3)
+                section = SectionFromDxf(tmp_filename, scale=1.0)
                 section.create_meshed_geometry()
-                geom_props = section.calculate_geometric_properties()
-                Iyy = geom_props["Iyy"]  # Moment of inertia about the y-axis in mm^4
+                mesh = section.create_mesh(mesh_sizes=1.0)  # Default mesh size
+                section_properties = mesh.calculate_section_properties()
+                # Access properties like:
+                Iyy = section_properties.Iyy
                 
                 # Calculate section depth from the bounding box.
                 # The bounding box returns [x_min, y_min, x_max, y_max]
