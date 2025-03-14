@@ -71,15 +71,20 @@ with st.expander("Custom Profile Settings", expanded=False):
     custom_option = st.selectbox("Select Custom Profile Option", ["None", "Manual Input", "Import DXF"])
     custom_section_data = {}
     if custom_option == "Manual Input":
-        # Your manual input code stays as is
         col1, col2, col3, col4 = st.columns(4)
-        # ...
+        with col1:
+            name = st.text_input("Profile Name", value="Custom Profile")
+        with col2:
+            depth = st.number_input("Section Depth (mm)", min_value=50.0, max_value=500.0, value=150.0, step=1.0)
+        with col3:
+            Z = st.number_input("Section Modulus (cm³)", min_value=1.0, max_value=1000.0, value=50.0, step=1.0)
+        with col4:
+            I = st.number_input("Moment of Inertia (cm⁴)", min_value=1.0, max_value=10000.0, value=500.0, step=1.0)
         custom_section_data = {"type": "manual", "name": name, "depth": depth, "Z": Z, "I": I}
     elif custom_option == "Import DXF":
-        from custom_profile import process_dxf_profile  # Rename/modify the function
+        from custom_profile import process_dxf_profile  # Renamed function
         custom_section_data = process_dxf_profile()
 use_custom_section = custom_section_data.get("type") in ["manual", "dxf"]
-
 
 
 # ---------------------------
