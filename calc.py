@@ -260,20 +260,20 @@ def generate_section_database(
     df_mat.reset_index(drop=True, inplace=True)
 
     if use_custom_section and custom_section_data:
-    custom_row = pd.DataFrame({
-        "Supplier": ["Custom"],
-        "Profile Name": [custom_section_data["name"]],
-        "Material": [plot_material],
-        # Default reinforcement value since it's not used anymore
-        "Reinf": [True],
-        "Depth": [custom_section_data["depth"]],
-        "Iyy": [custom_section_data["I"] * 10000],   # cm⁴ to mm⁴
-        "Wyy": [custom_section_data["Z"] * 1000]       # cm³ to mm³
-    })
-    df_mat = pd.concat([df_mat, custom_row], ignore_index=True)
-
-    # Calculate ULS utilisation as the ratio of required section modulus to available modulus.
-    df_mat["ULS Utilisation"] = Z_req_cm3 / (df_mat["Wyy"] / 1000)
+        custom_row = pd.DataFrame({
+            "Supplier": ["Custom"],
+            "Profile Name": [custom_section_data["name"]],
+            "Material": [plot_material],
+            # Default reinforcement value since it's not used anymore
+            "Reinf": [True],
+            "Depth": [custom_section_data["depth"]],
+            "Iyy": [custom_section_data["I"] * 10000],   # cm⁴ to mm⁴
+            "Wyy": [custom_section_data["Z"] * 1000]       # cm³ to mm³
+        })
+        df_mat = pd.concat([df_mat, custom_row], ignore_index=True)
+    
+        # Calculate ULS utilisation as the ratio of required section modulus to available modulus.
+        df_mat["ULS Utilisation"] = Z_req_cm3 / (df_mat["Wyy"] / 1000)
 
     # Recompute deflection for each row
     E = material_props[plot_material]["E"]
