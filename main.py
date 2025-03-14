@@ -66,22 +66,22 @@ wind_pressure = st.sidebar.slider("Wind Pressure (kPa)", 0.1, 5.0, 1.0, 0.1)
 bay_width = st.sidebar.slider("Bay Width (mm)", 500, 10000, 3000, 250)
 mullion_length = st.sidebar.slider("Mullion Length (mm)", 2500, 12000, 4000, 250)
 
-# Sidebar: Custom Section Controls
-st.sidebar.header("Custom Section")
-use_custom_section = st.sidebar.checkbox("Add Custom Section?", value=False)
+# Custom Section Controls
+st.header("Custom Profile Settings")
+custom_option = st.selectbox("Select Custom Profile Option", ["None", "Manual Input", "Import DXF"])
 custom_section_data = {}
-if use_custom_section:
+if custom_option == "Manual Input":
     custom_section_data = {
-        "name": st.sidebar.text_input("Section Name", value="Custom Section"),
-        "material": plot_material,
-        "depth": st.sidebar.number_input("Section Depth (mm)", min_value=50, max_value=500, value=150),
-        "modulus": st.sidebar.number_input("Section Modulus (cm³)", min_value=1.0, max_value=1000.0, value=50.0),
-        "I": st.sidebar.number_input("Moment of Inertia (cm⁴)", min_value=1.0, max_value=10000.0, value=500.0),
-        "supplier": "Custom",
-        "reinforced": st.sidebar.checkbox("Reinforced?", value=False)
+        "type": "manual",
+        "name": st.text_input("Profile Name", value="Custom Profile"),
+        "depth": st.number_input("Section Depth (mm)", min_value=50.0, max_value=500.0, value=150.0, step=1.0),
+        "Z": st.number_input("Section Modulus (cm³)", min_value=1.0, max_value=1000.0, value=50.0, step=1.0),
+        "I": st.number_input("Moment of Inertia (cm⁴)", min_value=1.0, max_value=10000.0, value=500.0, step=1.0)
     }
-
-from custom_profile import get_custom_profile
+elif custom_option == "Import DXF":
+    # This function (from custom_profile.py) handles file upload and property extraction.
+    from custom_profile import get_custom_profile
+    custom_section_data = get_custom_profile()
 
 # Custom profile option (moved from the sidebar)
 custom_profile_data = get_custom_profile()
