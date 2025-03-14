@@ -95,7 +95,7 @@ use_custom_section = custom_profile_data.get("type") in ["manual", "dxf"]
 uls_fig, sls_fig, util_fig, defl_values, Z_req_cm3, defl_limit = generate_plots(
     wind_pressure, bay_width, mullion_length, selected_barrier_load,
     ULS_case, SLS_case, df_selected, plot_material, selected_suppliers,
-    use_custom_section, custom_section_data, view_3d_option
+    use_custom_section, custom_profile_data, view_3d_option
 )
 
 # ---------------------------
@@ -119,7 +119,7 @@ with col3:
 # Section Database Table
 # ---------------------------
 df_display = generate_section_database(
-    df_selected, plot_material, selected_suppliers, custom_section_data, use_custom_section,
+    df_selected, plot_material, selected_suppliers, custom_profile_data, use_custom_section,
     wind_pressure, bay_width, mullion_length, selected_barrier_load, SLS_case, defl_limit, Z_req_cm3
 )
 st.title("Section Database")
