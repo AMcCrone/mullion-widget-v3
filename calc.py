@@ -248,7 +248,7 @@ def generate_section_database(
     df_selected, plot_material, selected_suppliers, custom_section_data, use_custom_section,
     wind_pressure, bay_width, mullion_length, selected_barrier_load, SLS_case, defl_limit, Z_req_cm3
 ):
-    from config import BARRIER_LENGTH, material_props, TT_LightBlue, TT_DarkBlue, TT_DarkBlue
+    from config import BARRIER_LENGTH, material_props, TT_LightBlue, TT_MidBlue, TT_Orange
     import pandas as pd
     import numpy as np
     
@@ -320,8 +320,9 @@ def generate_section_database(
         def row_style(row):
             # Parse RGB values from color strings
             light_blue = tuple(int(x) for x in TT_LightBlue.replace("rgb(", "").replace(")", "").split(","))
-            mid_blue = tuple(int(x) for x in TT_DarkBlue.replace("rgb(", "").replace(")", "").split(","))
+            mid_blue = tuple(int(x) for x in TT_MidBlue.replace("rgb(", "").replace(")", "").split(","))
             
+            styles = []
             # Check if row is passing or failing
             if row.name < pass_count:
                 # Create gradient for passing sections
@@ -331,10 +332,16 @@ def generate_section_database(
                 g = int(light_blue[1] + (mid_blue[1] - light_blue[1]) * ratio)
                 b = int(light_blue[2] + (mid_blue[2] - light_blue[2]) * ratio)
                 
-                return ['background-color: rgba({},{},{},0.2)'.format(r, g, b)] * len(row)
+                # Apply background color for passing sections
+                background_style = 'background-color: rgba({},{},{},0.2)'.format(r, g, b)
+                styles = [background_style] * len(row)
             else:
-                # Failing sections get mid blue color with opacity
-                return ['background-color: rgba({},{},{},0.2)'.format(mid_blue[0], mid_blue[1], mid_blue[2])] * len(row)
+                # Failing sections get mid blue background with orange text
+                orange = TT_Orange.replace("rgb", "rgba").replace(")", ",0.2)")
+                background_style = 'background-color: {}; color: {}'.format(orange, TT_Orange)
+                styles = [background_style] * len(row)
+            
+            return styles
         
         # Apply the styling
         return dataframe.style.apply(row_style, axis=1)
