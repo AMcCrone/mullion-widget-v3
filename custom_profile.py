@@ -74,8 +74,54 @@ def get_custom_profile():
     return custom_data
 
 def process_dxf_profile():
-    # Skip the selectbox part since it's already handled in main.py
+    """Process a DXF file to extract section properties."""
     custom_data = {"type": "dxf"}
     uploaded_file = st.file_uploader("Upload DXF File", type=["dxf"])
-    # Rest of your DXF processing code
+    
+    if uploaded_file is not None:
+        # Write the uploaded DXF to a temporary file
+        with tempfile.NamedTemporaryFile(delete=False, suffix=".dxf") as tmp_file:
+            tmp_file.write(uploaded_file.getbuffer())
+            tmp_filename = tmp_file.name
+        try:
+            # Use the updated sectionproperties API
+            geom = Geometry.from_dxf(dxf_filepath=tmp_filename)
+            geom.create_mesh(mesh_sizes=[1.0])  # Default mesh size
+            sec = Section(geometry=geom)
+            
+            # Calculate geometric properties
+            sec.calculate_geometric_properties()
+            
+            # Get moment of inertia
+            ixx_g, iyy_g, ixy_g = sec.get_ig()
+            
+            # Calculate section depth from the bounds
+            x_min, y_min, x_max, y_max = geom.get_bounds()
+            section_depth = y_max - y_min  # in mm
+            
+            # Calculate section modulus: Z = I / (depth/2)
+            Z = iyy_g / (section_depth / 2) if section_depth != 0 else 0
+            
+            # Let the user give a profile name
+            custom_data["name"] = st.text_input("Profile Name", value="DXF Profile")
+            custom_data["depth"] = section_depth
+            # Convert Iyy from mm^4 to cm^4 (divide by 1e4)
+            custom_data["I"] = iyy_g / 1e4  
+            # Convert Z from mm^3 to cm^3 (divide by 1e3)
+            custom_data["Z"] = Z / 1e3  
+            
+            st.write("**Calculated Section Properties from DXF:**")
+            st.write(f"Section Depth: **{section_depth:.2f} mm**")
+            st.write(f"Moment of Inertia (Iyy): **{iyy_g:.2f} mm⁴** (or **{custom_data['I']:.2f} cm⁴**)")
+            st.write(f"Section Modulus (Z): **{Z:.2f} mm³** (or **{custom_data['Z']:.2f} cm³**)")
+            
+        except Exception as e:
+            st.error(f"Error processing DXF file: {e}")
+            custom_data = {"type": "none"}
+        finally:
+            os.remove(tmp_filename)
+    else:
+        # If no file is uploaded, set type to none
+        custom_data = {"type": "none"}
+    
     return custom_data
