@@ -116,7 +116,7 @@ df_display = generate_section_database(
     wind_pressure, bay_width, mullion_length, selected_barrier_load, SLS_case, defl_limit, Z_req_cm3
 )
 st.title("Section Database")
-st.dataframe(df_display, height=400)
+st.dataframe(df_display, height=500)
 
 # ---------------------------
 # Documentation Section
