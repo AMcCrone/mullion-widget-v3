@@ -10,7 +10,9 @@ TT_LightBlue = "rgb(136,219,223)"
 TT_MidBlue = "rgb(0,163,173)"
 TT_DarkBlue = "rgb(0,48,60)"
 TT_Grey = "rgb(99,102,105)"
-TT_Purple = "rgb(128,0,128)"  # For custom sections
+TT_LightLightBlue = "rgb(207,241,242)"
+TT_LightGrey = "rgb(223,224,225)"
+TT_Purple = "rgb(128,0,128)"
 
 # Material properties
 material_props = {
