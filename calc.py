@@ -321,7 +321,7 @@ def generate_section_database(
             if row.name < pass_count:
                 # Create gradient for passing sections
                 ratio = row.name / max(1, pass_count - 1)  # Avoid division by zero
-                mid_blue = tuple(int(x) for x in TT_MidBlue.replace("rgb(", "").replace(")", "").split(","))
+                mid_blue = tuple(int(x) for x in TT_LightBlue.replace("rgb(", "").replace(")", "").split(","))
                 grey = tuple(int(x) for x in TT_Grey.replace("rgb(", "").replace(")", "").split(","))
                 
                 r = int(mid_blue[0] + (grey[0] - mid_blue[0]) * ratio)
