@@ -54,14 +54,17 @@ def generate_plots(
     available_cm3 = Wyy_vals / 1000  # Convert to cm³
 
     # Add custom section if enabled
-    if use_custom_section and custom_section_data:
-        depths = np.append(depths, custom_section_data["depth"])
-        Wyy_vals = np.append(Wyy_vals, custom_section_data["modulus"] * 1000)  # cm³ -> mm³
-        Iyy_vals = np.append(Iyy_vals, custom_section_data["I"] * 10000)      # cm⁴ -> mm⁴
-        profiles = np.append(profiles, custom_section_data["name"])
-        reinf = np.append(reinf, custom_section_data["reinforced"])
-        supps = np.append(supps, custom_section_data["supplier"])
-        available_cm3 = np.append(available_cm3, custom_section_data["modulus"])
+if use_custom_section and custom_section_data:
+    depths = np.append(depths, custom_section_data["depth"])
+    # Use custom_section_data["Z"] instead of "modulus"
+    Wyy_vals = np.append(Wyy_vals, custom_section_data["Z"] * 1000)  # cm³ -> mm³
+    Iyy_vals = np.append(Iyy_vals, custom_section_data["I"] * 10000)   # cm⁴ -> mm⁴
+    profiles = np.append(profiles, custom_section_data["name"])
+    # Remove the reinforced part; set a default value (e.g., True) for plotting symbols
+    reinf = np.append(reinf, True)
+    # Set supplier as "Custom"
+    supps = np.append(supps, "Custom")
+    available_cm3 = np.append(available_cm3, custom_section_data["Z"])
 
     # ----- ULS Plot -----
     uls_passed = available_cm3 >= Z_req_cm3
@@ -257,16 +260,17 @@ def generate_section_database(
     df_mat.reset_index(drop=True, inplace=True)
 
     if use_custom_section and custom_section_data:
-        custom_row = pd.DataFrame({
-            "Supplier": [custom_section_data["supplier"]],
-            "Profile Name": [custom_section_data["name"]],
-            "Material": [plot_material],
-            "Reinf": [custom_section_data["reinforced"]],
-            "Depth": [custom_section_data["depth"]],
-            "Iyy": [custom_section_data["I"] * 10000],   # cm⁴ to mm⁴
-            "Wyy": [custom_section_data["modulus"] * 1000] # cm³ to mm³
-        })
-        df_mat = pd.concat([df_mat, custom_row], ignore_index=True)
+    custom_row = pd.DataFrame({
+        "Supplier": ["Custom"],
+        "Profile Name": [custom_section_data["name"]],
+        "Material": [plot_material],
+        # Default reinforcement value since it's not used anymore
+        "Reinf": [True],
+        "Depth": [custom_section_data["depth"]],
+        "Iyy": [custom_section_data["I"] * 10000],   # cm⁴ to mm⁴
+        "Wyy": [custom_section_data["Z"] * 1000]       # cm³ to mm³
+    })
+    df_mat = pd.concat([df_mat, custom_row], ignore_index=True)
 
     # Calculate ULS utilisation as the ratio of required section modulus to available modulus.
     df_mat["ULS Utilisation"] = Z_req_cm3 / (df_mat["Wyy"] / 1000)
