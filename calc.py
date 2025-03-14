@@ -1,7 +1,7 @@
 import numpy as np
 import pandas as pd
 import plotly.graph_objects as go
-from config import TT_LightBlue, TT_MidBlue, TT_Purple, material_props, BARRIER_LENGTH
+from config import TT_LightBlue, TT_MidBlue, TT_Grey, TT_Purple, material_props, BARRIER_LENGTH
 
 def generate_plots(
     wind_pressure, bay_width, mullion_length, selected_barrier_load,
@@ -248,7 +248,7 @@ def generate_section_database(
     df_selected, plot_material, selected_suppliers, custom_section_data, use_custom_section,
     wind_pressure, bay_width, mullion_length, selected_barrier_load, SLS_case, defl_limit, Z_req_cm3
 ):
-    from config import BARRIER_LENGTH, material_props
+    from config import BARRIER_LENGTH, material_props, TT_MidBlue, TT_Grey
     df_mat = df_selected[(df_selected["Material"] == plot_material) &
                          (df_selected["Supplier"].isin(selected_suppliers))].copy()
     df_mat.reset_index(drop=True, inplace=True)
@@ -282,12 +282,51 @@ def generate_section_database(
 
     # Create a sorting metric and format the dataframe for display
     df_mat["Max Utilisation"] = df_mat[["ULS Utilisation", "SLS Utilisation"]].max(axis=1)
-    df_sorted = df_mat.sort_values(by="Max Utilisation", ascending=True)
+    
+    # Separate passing and failing sections
+    df_pass = df_mat[df_mat["Max Utilisation"] <= 1.0].copy()
+    df_fail = df_mat[df_mat["Max Utilisation"] > 1.0].copy()
+    
+    # Sort passing sections by SLS Utilisation (highest to lowest)
+    df_pass = df_pass.sort_values(by="SLS Utilisation", ascending=False)
+    
+    # Sort failing sections by Max Utilisation (lowest to highest)
+    df_fail = df_fail.sort_values(by="Max Utilisation", ascending=True)
+    
+    # Concatenate passing and failing dataframes
+    df_sorted = pd.concat([df_pass, df_fail], ignore_index=True)
+    
+    # Create display dataframe with formatted columns
     df_display = df_sorted.copy()
     df_display["Section Modulus (cm³)"] = (df_display["Wyy"] / 1000).round(2)
     df_display["I (cm⁴)"] = (df_display["Iyy"] / 10000).round(2)
     df_display["ULS Util. (%)"] = (df_display["ULS Utilisation"] * 100).round(1)
     df_display["SLS Util. (%)"] = (df_display["SLS Utilisation"] * 100).round(1)
-    display_columns = ["Supplier", "Profile Name", "Depth", "Section Modulus (cm³)", "I (cm⁴)", "ULS Util. (%)", "SLS Util. (%)"]
+    
+    # Add styling information
+    df_display["Color"] = TT_Grey  # Default color for failing sections
+    
+    # Create color gradient for passing sections
+    if len(df_pass) > 0:
+        # Convert TT_MidBlue and TT_Grey to RGB tuples
+        mid_blue = tuple(map(int, TT_MidBlue.replace("rgb(", "").replace(")", "").split(",")))
+        grey = tuple(map(int, TT_Grey.replace("rgb(", "").replace(")", "").split(",")))
+        
+        # Calculate gradient steps
+        n_pass = len(df_pass)
+        colors = []
+        for i in range(n_pass):
+            ratio = i / max(1, n_pass - 1)  # Avoid division by zero
+            r = int(mid_blue[0] + (grey[0] - mid_blue[0]) * ratio)
+            g = int(mid_blue[1] + (grey[1] - mid_blue[1]) * ratio)
+            b = int(mid_blue[2] + (grey[2] - mid_blue[2]) * ratio)
+            colors.append(f"rgb({r},{g},{b})")
+        
+        # Assign colors to passing sections
+        df_display.loc[df_display["Max Utilisation"] <= 1.0, "Color"] = colors
+    
+    display_columns = ["Supplier", "Profile Name", "Depth", "Section Modulus (cm³)", "I (cm⁴)", 
+                       "ULS Util. (%)", "SLS Util. (%)", "Color"]
     df_display = df_display[display_columns]
+    
     return df_display
