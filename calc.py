@@ -244,7 +244,8 @@ if use_custom_section and custom_section_data:
     elif view_3d_option == "XZ Plane: Section Depth":
         camera = dict(eye=dict(x=0, y=2.5, z=0), projection=dict(type='orthographic'))
     util_fig.update_layout(scene_camera=camera)
-    return uls_fig, sls_fig, util_fig, defl_values, Z_req_cm3, defl_limit
+    
+return uls_fig, sls_fig, util_fig, defl_values, Z_req_cm3, defl_limit
 
 def generate_section_database(
     df_selected, plot_material, selected_suppliers, custom_section_data, use_custom_section,
