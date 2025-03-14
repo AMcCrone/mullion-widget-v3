@@ -81,6 +81,13 @@ if use_custom_section:
         "reinforced": st.sidebar.checkbox("Reinforced?", value=False)
     }
 
+from custom_profile import get_custom_profile
+
+# Custom profile option (moved from the sidebar)
+custom_profile_data = get_custom_profile()
+use_custom_section = custom_profile_data.get("type") in ["manual", "dxf"]
+
+
 # ---------------------------
 # Generate Figures & Calculations
 # ---------------------------
