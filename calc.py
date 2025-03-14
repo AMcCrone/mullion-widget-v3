@@ -272,8 +272,8 @@ def generate_section_database(
         })
         df_mat = pd.concat([df_mat, custom_row], ignore_index=True)
     
-        # Calculate ULS utilisation as the ratio of required section modulus to available modulus.
-        df_mat["ULS Utilisation"] = Z_req_cm3 / (df_mat["Wyy"] / 1000)
+    # Calculate ULS utilisation as the ratio of required section modulus to available modulus.
+    df_mat["ULS Utilisation"] = Z_req_cm3 / (df_mat["Wyy"] / 1000)
 
     # Recompute deflection for each row
     E = material_props[plot_material]["E"]
