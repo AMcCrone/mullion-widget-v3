@@ -25,8 +25,7 @@ st.sidebar.header("Settings")
 plot_material = st.sidebar.selectbox("Select Material", options=["Aluminium", "Steel"], index=0)
 
 # Read the Excel file (using a relative path)
-BASE_DIR = os.path.dirname(__file__)
-file_path = os.path.join(BASE_DIR, "Cross_Sections_Database.xlsx")
+file_path = "data/Cross_Sections_Database.xlsx"
 SHEET = "Alu Mullion Database" if plot_material == "Aluminium" else "Steel Mullion Database"
 try:
     df = pd.read_excel(file_path, sheet_name=SHEET, engine="openpyxl")
