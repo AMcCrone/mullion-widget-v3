@@ -72,3 +72,10 @@ def get_custom_profile():
         custom_data["type"] = "none"
     
     return custom_data
+
+def process_dxf_profile():
+    # Skip the selectbox part since it's already handled in main.py
+    custom_data = {"type": "dxf"}
+    uploaded_file = st.file_uploader("Upload DXF File", type=["dxf"])
+    # Rest of your DXF processing code
+    return custom_data
