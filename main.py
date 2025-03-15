@@ -128,7 +128,10 @@ bay_width = st.sidebar.slider("Bay Width (mm)", 500, 10000, 3000, 250)
 mullion_length = st.sidebar.slider("Mullion Length (mm)", 2500, 12000, 4000, 250)
 
 with st.expander("Custom Profile Settings", expanded=False):
-    custom_option = st.selectbox("Select Custom Profile Option", ["None", "Manual Input", "Parametric RHS"])
+    custom_option = st.selectbox(
+        "Select Custom Profile Option",
+        ["None", "Manual Input", "Parametric RHS"]
+    )
     custom_section_data = {}
     if custom_option == "Manual Input":
         col1, col2, col3, col4 = st.columns(4)
