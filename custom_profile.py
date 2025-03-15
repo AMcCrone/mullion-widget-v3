@@ -10,7 +10,6 @@ def get_custom_profile():
     """Process DXF file and return section properties with visualization"""
     custom_data = {"type": "dxf"}
     
-    st.subheader("DXF Profile Import")
     uploaded_file = st.file_uploader("Upload DXF File", type=["dxf"])
     
     if uploaded_file is not None:
@@ -30,19 +29,22 @@ def get_custom_profile():
             zxx_plus, zxx_minus, *_ = sec.get_z()  # Major axis moduli
             zxx = min(zxx_plus, zxx_minus)  # Conservative value
             
-            # Calculate depth from geometry bounds
-            y_min = sec.section_props.y_min
-            y_max = sec.section_props.y_max
-            depth = y_max - y_min
+            # Manual depth input fallback
+            try:
+                extents = geom.calculate_extents()
+                depth = extents[1][1] - extents[0][1]  # y_max - y_min
+            except:
+                st.warning("Could not calculate depth automatically")
+                depth = st.number_input("Manual Section Depth (mm)", 
+                                      min_value=50.0, max_value=500.0, 
+                                      value=150.0, step=1.0)
 
             # Create visualization
             fig, ax = plt.subplots(figsize=(6, 4))
             sec.plot_mesh(materials=False, ax=ax)
             ax.set_title("Section Mesh Preview")
             ax.set_aspect("equal")
-            
-            # Rotate 90 degrees for web display
-            ax.invert_xaxis()  # Flip to show conventional engineering orientation
+            ax.invert_xaxis()
             ax.invert_yaxis()
 
             # Populate custom data
@@ -60,17 +62,17 @@ def get_custom_profile():
 
         except Exception as e:
             st.error(f"DXF Processing Error: {str(e)}")
-            st.write("Common issues:")
-            st.write("- Open or self-intersecting geometry")
-            st.write("- Non-planar elements (Z-values present)")
-            st.write("- Complex/non-manifold topology")
+            st.write("**Troubleshooting Tips:**")
+            st.write("- Ensure closed, non-intersecting polylines")
+            st.write("- Flatten to 2D geometry (Z=0 in CAD software)")
+            st.write("- Simplify complex geometries")
             custom_data = {}
             
-            # Debugging help
-            with st.expander("Technical Details"):
-                st.write("Temporary file path:", tmp_filename)
-                if 'sec' in locals():
-                    st.write("Available section methods:", dir(sec))
+            # Debugging without expander
+            st.write("#### Technical Details")
+            st.write("Temporary file path:", tmp_filename)
+            if 'sec' in locals():
+                st.write("Available section methods:", dir(sec)[:10])  # First 10 methods
                 
         finally:
             os.remove(tmp_filename)
