@@ -88,25 +88,24 @@ def process_dxf_profile():
         try:
             # Create geometry and calculate properties
             geom = Geometry.from_dxf(tmp_filename)
-            geom.create_mesh(mesh_sizes=[1.0])
+            geom.create_mesh(mesh_sizes=[0.5])
             sec = Section(geom)
-            sec.calculate_geometric_properties()  # This calculates ALL basic properties
+            sec.calculate_geometric_properties()
 
-            # Direct property access (Iyy in mm⁴)
-            iyy_g = sec.iyy_g
+            # Access properties through section_props attribute
+            props = sec.section_props
 
-            # Get extreme fiber distances from centroid
-            y_top = sec.y_max - sec.cy  # Distance to top fiber
-            y_bottom = sec.cy - sec.y_min  # Distance to bottom fiber
-            y_extent = max(y_top, y_bottom)  # Use largest distance
+            # Get Iyy (mm⁴)
+            iyy_g = props.iyy_g
 
-            # Calculate Zyy manually (mm³)
+            # Calculate Zyy manually using centroid position
+            y_extent = max(props.y_max - props.cy, props.cy - props.y_min)
             zyy = iyy_g / y_extent if y_extent != 0 else 0
 
             # Populate data (convert to cm units)
             custom_data.update({
                 "name": st.text_input("Profile Name", "DXF Profile"),
-                "depth": sec.y_max - sec.y_min,
+                "depth": props.y_max - props.y_min,
                 "I": iyy_g / 1e4,  # mm⁴ → cm⁴
                 "Z": zyy / 1e3     # mm³ → cm³
             })
