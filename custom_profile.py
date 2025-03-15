@@ -7,7 +7,7 @@ from sectionproperties.analysis import Section
 import matplotlib.pyplot as plt
 
 def get_custom_profile():
-    """Process DXF file and return section properties with visualization"""
+    """Process DXF file with manual depth input"""
     custom_data = {"type": "dxf"}
     
     uploaded_file = st.file_uploader("Upload DXF File", type=["dxf"])
@@ -18,7 +18,7 @@ def get_custom_profile():
             tmp_filename = tmp_file.name
             
         try:
-            # Process DXF
+            # Process DXF for basic properties
             geom = Geometry.from_dxf(dxf_filepath=tmp_filename)
             geom.create_mesh(mesh_sizes=[2.0])
             sec = Section(geometry=geom)
@@ -29,15 +29,10 @@ def get_custom_profile():
             zxx_plus, zxx_minus, *_ = sec.get_z()  # Major axis moduli
             zxx = min(zxx_plus, zxx_minus)  # Conservative value
             
-            # Manual depth input fallback
-            try:
-                extents = geom.calculate_extents()
-                depth = extents[1][1] - extents[0][1]  # y_max - y_min
-            except:
-                st.warning("Could not calculate depth automatically")
-                depth = st.number_input("Manual Section Depth (mm)", 
-                                      min_value=50.0, max_value=500.0, 
-                                      value=150.0, step=1.0)
+            # Manual depth input
+            depth = st.number_input("Section Depth (mm)", 
+                                  min_value=50.0, max_value=500.0, 
+                                  value=150.0, step=1.0)
 
             # Create visualization
             fig, ax = plt.subplots(figsize=(6, 4))
@@ -56,23 +51,13 @@ def get_custom_profile():
             # Display results
             st.pyplot(fig)
             st.write("**Calculated Section Properties:**")
-            st.metric("Section Depth", f"{depth:.1f} mm")
             st.metric("Moment of Inertia (Ixx)", f"{custom_data['I']:.1f} cm⁴")
             st.metric("Section Modulus (Zxx)", f"{custom_data['Z']:.1f} cm³")
 
         except Exception as e:
             st.error(f"DXF Processing Error: {str(e)}")
-            st.write("**Troubleshooting Tips:**")
-            st.write("- Ensure closed, non-intersecting polylines")
-            st.write("- Flatten to 2D geometry (Z=0 in CAD software)")
-            st.write("- Simplify complex geometries")
-            custom_data = {}
-            
-            # Debugging without expander
-            st.write("#### Technical Details")
             st.write("Temporary file path:", tmp_filename)
-            if 'sec' in locals():
-                st.write("Available section methods:", dir(sec)[:10])  # First 10 methods
+            custom_data = {}
                 
         finally:
             os.remove(tmp_filename)
