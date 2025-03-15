@@ -27,7 +27,7 @@ def get_custom_profile():
             try:
                 # Use the updated sectionproperties API
                 geom = Geometry.from_dxf(dxf_filepath=tmp_filename)
-                geom.create_mesh(mesh_sizes=[1.0])  # Default mesh size
+                geom.create_mesh(mesh_sizes=[0.2])  # Default mesh size
                 sec = Section(geometry=geom)
                 
                 # Calculate geometric properties
