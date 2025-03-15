@@ -92,24 +92,25 @@ def process_dxf_profile():
             sec = Section(geom)
             sec.calculate_geometric_properties()
 
-            # 2. Get extents using new API method
-            # First get all section properties
-            props = sec.get_frame()
-            
-            # Extract needed values from pandas Series
-            y_min = props["y_min"]
-            y_max = props["y_max"]
-            cy = props["cy"]
-            iyy_g = props["iyy_g"]
+            # 2. Get properties through calculated attributes
+            iyy_g = sec.iyy_g  # Moment of inertia
+            cy = sec.cy        # Centroid y-position
 
-            # 3. Calculate section modulus
+            # 3. Get extents from geometry points
+            all_points = geom.points  # Get all vertices in the geometry
+            y_coords = [p[1] for p in all_points]  # Extract Y-coordinates
+            y_min = min(y_coords)
+            y_max = max(y_coords)
+            section_depth = y_max - y_min
+
+            # 4. Calculate section modulus
             y_extent = max(y_max - cy, cy - y_min)
             zyy = iyy_g / y_extent if y_extent != 0 else 0
 
-            # 4. Populate data (convert to cm units)
+            # 5. Populate data (convert to cm units)
             custom_data.update({
                 "name": st.text_input("Profile Name", "DXF Profile"),
-                "depth": y_max - y_min,
+                "depth": section_depth,
                 "I": iyy_g / 1e4,  # mm⁴ → cm⁴
                 "Z": zyy / 1e3     # mm³ → cm³
             })
@@ -117,10 +118,11 @@ def process_dxf_profile():
             # Display results
             st.write(f"**Iyy:** {iyy_g:,.2f} mm⁴ ({custom_data['I']:,.2f} cm⁴)")
             st.write(f"**Zyy:** {zyy:,.2f} mm³ ({custom_data['Z']:,.2f} cm³)")
-            st.write(f"**Depth:** {custom_data['depth']:.1f} mm")
+            st.write(f"**Depth:** {section_depth:.1f} mm")
 
         except Exception as e:
             st.error(f"DXF processing failed: {str(e)}")
+            st.write("Common issues: 1) Open contours in DXF, 2) Self-intersecting geometry, 3) Units not in mm")
             custom_data = {"type": "none"}
         finally:
             os.remove(tmp_filename)
