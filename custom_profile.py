@@ -97,18 +97,29 @@ def process_dxf_profile():
             # Get moment of inertia
             ixx_g, iyy_g, ixy_g = sec.get_ig()
             
-            # Get section modulus directly from the elastic section modulus method
-            # Get the elastic section moduli
-            zxx_plus, zxx_minus, zyy_plus, zyy_minus = sec.get_z()
-            
-            # Use the maximum of the positive and negative zyy values for the section modulus
-            Z = max(abs(zyy_plus), abs(zyy_minus))
-            
             # Calculate section depth
             extents = geom.calculate_extents()
             x_min, y_min = extents[0]
             x_max, y_max = extents[1]
             section_depth = y_max - y_min  # in mm
+            
+            # Get section modulus - try different API approaches
+            try:
+                # First approach: Try to get elastic section moduli if available
+                elastic_moduli = sec.get_elastic_moduli()
+                if isinstance(elastic_moduli, dict) and 'zyy' in elastic_moduli:
+                    Z = elastic_moduli['zyy']
+                else:
+                    # Fallback to manual calculation
+                    Z = iyy_g / (section_depth / 2) if section_depth != 0 else 0
+            except (AttributeError, TypeError):
+                # If get_elastic_moduli() doesn't exist or returns unexpected format
+                try:
+                    # Second approach: Try accessing z directly
+                    Z = sec.z
+                except AttributeError:
+                    # Final fallback: manual calculation
+                    Z = iyy_g / (section_depth / 2) if section_depth != 0 else 0
             
             # Let the user give a profile name
             custom_data["name"] = st.text_input("Profile Name", value="DXF Profile")
@@ -121,10 +132,16 @@ def process_dxf_profile():
             st.write("**Calculated Section Properties from DXF:**")
             st.write(f"Section Depth: **{section_depth:.2f} mm**")
             st.write(f"Moment of Inertia (Iyy): **{iyy_g:.2f} mm⁴** (or **{custom_data['I']:.2f} cm⁴**)")
-            st.write(f"Section Modulus (Zyy): **{Z:.2f} mm³** (or **{custom_data['Z']:.2f} cm³**)")
+            st.write(f"Section Modulus (Z): **{Z:.2f} mm³** (or **{custom_data['Z']:.2f} cm³**)")
+            
+            # Display a debug message
+            st.write("**API Methods Available:**")
+            method_list = [method for method in dir(sec) if not method.startswith('_')]
+            st.write(", ".join(method_list))
             
         except Exception as e:
             st.error(f"Error processing DXF file: {e}")
+            st.write(f"Error details: {str(e)}")
             custom_data = {"type": "none"}
         finally:
             os.remove(tmp_filename)
