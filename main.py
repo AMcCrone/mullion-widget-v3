@@ -12,64 +12,6 @@ from custom_profile import get_custom_profile
 import matplotlib.pyplot as plt
 from sectionproperties.analysis.section import Section
 
-def process_rhs_profile():
-    """Process RHS parameters and plot section with mesh."""
-    from sectionproperties.pre.library.steel_sections import rectangular_hollow_section
-
-    custom_data = {"type": "rhs"}
-    
-    # Input controls
-    col1, col2, col3 = st.columns(3)
-    with col1:
-        d = st.number_input("Depth (mm)", min_value=50.0, max_value=500.0, value=150.0, step=1.0)
-    with col2:
-        b = st.number_input("Width (mm)", min_value=50.0, max_value=500.0, value=100.0, step=1.0)
-    with col3:
-        t = st.number_input("Thickness (mm)", min_value=1.0, max_value=25.0, value=5.0, step=0.5)
-
-    try:
-        # Create geometry and section
-        geometry = rectangular_hollow_section(d=d, b=b, t=t, r_out=2*t, n_r=8)
-        geometry.create_mesh(mesh_sizes=[1.0])
-        sec = Section(geometry)
-        
-        # Create plot
-        fig, ax = plt.subplots(figsize=(6, 4))
-        
-        # Plot geometry and mesh using Section methods
-        sec.plot_geometry(label_vertices=False, label_edges=False, ax=ax)
-        sec.plot_mesh(ax=ax, materials=False, node_labels=False, edge_labels=False)
-        
-        ax.set_title(f"RHS {d}x{b}x{t} Cross-Section")
-        st.pyplot(fig)
-        plt.close(fig)
-
-        # Calculate properties
-        sec.calculate_geometric_properties()
-        
-        iyy_g = sec.iyy_g
-        cy = sec.cy
-        y_extent = max(sec.y_max - cy, cy - sec.y_min)
-        zyy = iyy_g / y_extent if y_extent != 0 else 0
-
-        custom_data.update({
-            "name": st.text_input("Profile Name", value=f"RHS {d}x{b}x{t}"),
-            "depth": d,
-            "I": iyy_g / 1e4,
-            "Z": zyy / 1e3
-        })
-
-        st.success("Valid section generated!")
-        st.write(f"**Moment of Inertia (Iyy):** {custom_data['I']:.1f} cm⁴")
-        st.write(f"**Section Modulus (Zyy):** {custom_data['Z']:.1f} cm³")
-
-        return custom_data
-
-    except Exception as e:
-        st.error(f"Section generation failed: {str(e)}")
-        st.write("Common causes:\n- Wall thickness too large for dimensions\n- Invalid geometry parameters")
-        return {"type": "none"}
-
 # ---------------------------
 # Authentication & Page Config
 # ---------------------------
@@ -127,27 +69,22 @@ wind_pressure = st.sidebar.slider("Wind Pressure (kPa)", 0.1, 5.0, 1.0, 0.1)
 bay_width = st.sidebar.slider("Bay Width (mm)", 500, 10000, 3000, 250)
 mullion_length = st.sidebar.slider("Mullion Length (mm)", 2500, 12000, 4000, 250)
 
+# In main.py
 with st.expander("Custom Profile Settings", expanded=False):
     custom_option = st.selectbox(
-        "Select Custom Profile Option",
-        ["None", "Manual Input", "Parametric RHS"]
+        "Select Custom Profile Option", 
+        ["None", "Manual Input", "Import DXF"]
     )
+    
     custom_section_data = {}
+    
     if custom_option == "Manual Input":
-        col1, col2, col3, col4 = st.columns(4)
-        with col1:
-            name = st.text_input("Profile Name", value="Custom Profile")
-        with col2:
-            depth = st.number_input("Section Depth (mm)", min_value=50.0, max_value=500.0, value=150.0, step=1.0)
-        with col3:
-            Z = st.number_input("Section Modulus (cm³)", min_value=1.0, max_value=1000.0, value=50.0, step=1.0)
-        with col4:
-            I = st.number_input("Moment of Inertia (cm⁴)", min_value=1.0, max_value=10000.0, value=500.0, step=1.0)
-        custom_section_data = {"type": "manual", "name": name, "depth": depth, "Z": Z, "I": I}
-    elif custom_option == "Parametric RHS":
-        custom_section_data = process_rhs_profile()
+        # ... your existing manual input code ...
+    elif custom_option == "Import DXF":
+        from custom_profile import get_custom_profile
+        custom_section_data = get_custom_profile()
 
-use_custom_section = custom_section_data.get("type") in ["manual", "rhs"]
+use_custom_section = custom_section_data.get("type") in ["manual", "dxf"]
 
 
 # ---------------------------
