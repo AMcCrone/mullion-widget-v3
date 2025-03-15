@@ -8,7 +8,7 @@ from config import set_page_config, material_props
 from calc import generate_plots, generate_section_database
 from pdf_export import get_pdf_bytes
 from documentation import render_documentation
-from custom_profile import get_custom_profile, process_dxf_profile
+from custom_profile import get_custom_profile, process_rhs_profile
 
 # ---------------------------
 # Authentication & Page Config
@@ -68,7 +68,7 @@ bay_width = st.sidebar.slider("Bay Width (mm)", 500, 10000, 3000, 250)
 mullion_length = st.sidebar.slider("Mullion Length (mm)", 2500, 12000, 4000, 250)
 
 with st.expander("Custom Profile Settings", expanded=False):
-    custom_option = st.selectbox("Select Custom Profile Option", ["None", "Manual Input", "Import DXF"])
+    custom_option = st.selectbox("Select Custom Profile Option", ["None", "Manual Input", "Parametric RHS"])
     custom_section_data = {}
     if custom_option == "Manual Input":
         col1, col2, col3, col4 = st.columns(4)
@@ -81,10 +81,10 @@ with st.expander("Custom Profile Settings", expanded=False):
         with col4:
             I = st.number_input("Moment of Inertia (cm⁴)", min_value=1.0, max_value=10000.0, value=500.0, step=1.0)
         custom_section_data = {"type": "manual", "name": name, "depth": depth, "Z": Z, "I": I}
-    elif custom_option == "Import DXF":
-        from custom_profile import process_dxf_profile  # Renamed function
-        custom_section_data = process_dxf_profile()
-use_custom_section = custom_section_data.get("type") in ["manual", "dxf"]
+    elif custom_option == "Parametric RHS":
+        custom_section_data = process_rhs_profile()
+
+use_custom_section = custom_section_data.get("type") in ["manual", "rhs"]
 
 
 # ---------------------------
