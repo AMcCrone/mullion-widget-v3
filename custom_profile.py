@@ -37,7 +37,9 @@ def get_custom_profile():
                 ixx_g, iyy_g, ixy_g = sec.get_ig()
                 
                 # Calculate section depth from the bounds
-                x_min, y_min, x_max, y_max = geom.get_bounds()
+                extents = geom.calculate_extents()
+                x_min, y_min = extents[0]
+                x_max, y_max = extents[1]
                 section_depth = y_max - y_min  # in mm
                 
                 # Calculate section modulus: Z = I / (depth/2)
