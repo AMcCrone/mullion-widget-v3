@@ -8,3 +8,4 @@ reportlab
 PyPDF2
 sectionproperties>=3.0.0
 cad_to_shapely
+matplotlib
