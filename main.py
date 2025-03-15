@@ -70,7 +70,7 @@ bay_width = st.sidebar.slider("Bay Width (mm)", 500, 10000, 3000, 250)
 mullion_length = st.sidebar.slider("Mullion Length (mm)", 2500, 12000, 4000, 250)
 
 # In main.py
-with st.expander("Custom Profile Settings", expanded=False):
+with st.expander("Custom Profile?", expanded=False):
     custom_option = st.selectbox(
         "Select Custom Profile Option", 
         ["None", "Manual Input", "Import DXF"]
