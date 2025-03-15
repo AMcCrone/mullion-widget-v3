@@ -7,3 +7,4 @@ kaleido
 reportlab
 PyPDF2
 sectionproperties>=2.0.0
+cad_to_shapely
