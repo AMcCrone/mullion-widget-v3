@@ -7,8 +7,23 @@ from sectionproperties.analysis import Section
 import matplotlib.pyplot as plt
 
 def get_custom_profile():
-    """Process DXF file with manual depth input"""
-    custom_data = {"type": "dxf"}
+    """Process DXF file with optimized layout and rotation"""
+    custom_data = {
+        "type": "dxf",
+        "name": "DXF Profile",
+        "depth": 150.0,  # Default value
+        "Z": 0.0,
+        "I": 0.0
+    }
+    
+    # Input fields on one line
+    col1, col2 = st.columns(2)
+    with col1:
+        custom_data["name"] = st.text_input("Profile Name", value="DXF Profile")
+    with col2:
+        custom_data["depth"] = st.number_input("Section Depth (mm)", 
+                                             min_value=50.0, max_value=500.0, 
+                                             value=150.0, step=1.0)
     
     uploaded_file = st.file_uploader("Upload DXF File", type=["dxf"])
     
@@ -18,46 +33,46 @@ def get_custom_profile():
             tmp_filename = tmp_file.name
             
         try:
-            # Process DXF for basic properties
+            # Process DXF
             geom = Geometry.from_dxf(dxf_filepath=tmp_filename)
             geom.create_mesh(mesh_sizes=[2.0])
             sec = Section(geometry=geom)
             sec.calculate_geometric_properties()
 
-            # Get required properties
-            ixx = sec.get_ic()[0]  # Major moment of inertia (Ixx)
-            zxx_plus, zxx_minus, *_ = sec.get_z()  # Major axis moduli
-            zxx = min(zxx_plus, zxx_minus)  # Conservative value
-            
-            # Manual depth input
-            depth = st.number_input("Section Depth (mm)", 
-                                  min_value=50.0, max_value=500.0, 
-                                  value=150.0, step=1.0)
+            # Get properties
+            ixx = sec.get_ic()[0]
+            zxx_plus, zxx_minus, *_ = sec.get_z()
+            zxx = min(zxx_plus, zxx_minus)
 
-            # Create visualization
-            fig, ax = plt.subplots(figsize=(6, 4))
+            # Update calculated values
+            custom_data.update({
+                "I": ixx / 1e4,
+                "Z": zxx / 1e3
+            })
+
+            # Rotated mesh plot
+            fig, ax = plt.subplots(figsize=(8, 4))  # Landscape aspect ratio
             sec.plot_mesh(materials=False, ax=ax)
-            ax.set_title("Section Mesh Preview")
-            ax.set_aspect("equal")
+            
+            # Rotate 90 degrees
             ax.invert_xaxis()
             ax.invert_yaxis()
-
-            # Populate custom data
-            custom_data["name"] = st.text_input("Profile Name", value="DXF Profile")
-            custom_data["depth"] = depth
-            custom_data["I"] = ixx / 1e4  # mm⁴ → cm⁴
-            custom_data["Z"] = zxx / 1e3  # mm³ → cm³
-
-            # Display results
+            ax.set_aspect("equal")
+            ax.set_title("Section Preview (Rotated 90°)")
+            
             st.pyplot(fig)
-            st.write("**Calculated Section Properties:**")
+
+            # Display metrics
+            st.write("**Calculated Properties:**")
             st.metric("Moment of Inertia (Ixx)", f"{custom_data['I']:.1f} cm⁴")
             st.metric("Section Modulus (Zxx)", f"{custom_data['Z']:.1f} cm³")
 
         except Exception as e:
             st.error(f"DXF Processing Error: {str(e)}")
-            st.write("Temporary file path:", tmp_filename)
-            custom_data = {}
+            st.write("Ensure:")
+            st.write("- Closed, non-intersecting polylines")
+            st.write("- 2D geometry (Z=0)")
+            st.write("- Units in millimeters")
                 
         finally:
             os.remove(tmp_filename)
