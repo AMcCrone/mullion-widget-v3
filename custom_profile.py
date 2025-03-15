@@ -7,16 +7,16 @@ from sectionproperties.analysis import Section
 import matplotlib.pyplot as plt
 
 def get_custom_profile():
-    """Process DXF file with optimized layout and rotation"""
+    """Process DXF with proper 90° rotation for mullion visualization"""
     custom_data = {
         "type": "dxf",
         "name": "DXF Profile",
-        "depth": 150.0,  # Default value
-        "Z": 1.0,
-        "I": 1.0
+        "depth": 150.0,
+        "Z": 0.0,
+        "I": 0.0
     }
     
-    # Input fields on one line
+    # Input row at top
     col1, col2 = st.columns(2)
     with col1:
         custom_data["name"] = st.text_input("Profile Name", value="DXF Profile")
@@ -33,46 +33,48 @@ def get_custom_profile():
             tmp_filename = tmp_file.name
             
         try:
-            # Process DXF
+            # Load and rotate geometry
             geom = Geometry.from_dxf(dxf_filepath=tmp_filename)
-            geom.create_mesh(mesh_sizes=[5])
+            geom = geom.rotate_section(angle=90)  # Physical rotation
+            geom.create_mesh(mesh_sizes=[10.0])
             sec = Section(geometry=geom)
             sec.calculate_geometric_properties()
 
-            # Get properties
-            ixx = sec.get_ic()[0]
+            # Get properties from rotated section
+            ixx = sec.get_ic()[0]  # Now corresponds to original vertical axis
             zxx_plus, zxx_minus, *_ = sec.get_z()
             zxx = min(zxx_plus, zxx_minus)
 
-            # Update calculated values
+            # Update data with converted units
             custom_data.update({
-                "I": ixx / 1e4,
-                "Z": zxx / 1e3
+                "I": ixx / 1e4,  # mm⁴ → cm⁴
+                "Z": zxx / 1e3    # mm³ → cm³
             })
 
-            # Rotated mesh plot
-            fig, ax = plt.subplots(figsize=(8, 4))  # Landscape aspect ratio
+            # Create landscape plot
+            fig, ax = plt.subplots(figsize=(10, 5))  # Wider aspect ratio
             sec.plot_mesh(materials=False, ax=ax)
-            
-            # Rotate 90 degrees
-            ax.invert_xaxis()
-            ax.invert_yaxis()
+            ax.set_title("Mullion Cross-Section (Rotated 90°)")
             ax.set_aspect("equal")
-            ax.set_title("Section Preview (Rotated 90°)")
+            ax.set_xlabel("Height")
+            ax.set_ylabel("Width")
             
             st.pyplot(fig)
 
-            # Display metrics
-            st.write("**Calculated Properties:**")
-            st.metric("Moment of Inertia (Ixx)", f"{custom_data['I']:.1f} cm⁴")
-            st.metric("Section Modulus (Zxx)", f"{custom_data['Z']:.1f} cm³")
+            # Display results
+            st.write("**Structural Properties:**")
+            col1, col2 = st.columns(2)
+            with col1:
+                st.metric("Moment of Inertia (Ixx)", f"{custom_data['I']:.1f} cm⁴")
+            with col2:
+                st.metric("Section Modulus (Zxx)", f"{custom_data['Z']:.1f} cm³")
 
         except Exception as e:
-            st.error(f"DXF Processing Error: {str(e)}")
-            st.write("Ensure:")
-            st.write("- Closed, non-intersecting polylines")
-            st.write("- 2D geometry (Z=0)")
-            st.write("- Units in millimeters")
+            st.error(f"Processing Error: {str(e)}")
+            st.write("Ensure your DXF:")
+            st.write("- Contains closed polylines")
+            st.write("- Has units in millimeters")
+            st.write("- No 3D elements (Z=0 for all points)")
                 
         finally:
             os.remove(tmp_filename)
