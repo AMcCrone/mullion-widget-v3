@@ -92,36 +92,32 @@ def process_dxf_profile():
             sec = Section(geom)
             sec.calculate_geometric_properties()
 
-            # 2. Get extents from geometry (not section properties)
-            extents = geom.calculate_extents()
-            y_min = extents[0][1]  # (x_min, y_min)
-            y_max = extents[1][1]  # (x_max, y_max)
-            section_depth = y_max - y_min
+            # 2. Get extents using new API method
+            # First get all section properties
+            props = sec.get_frame()
+            
+            # Extract needed values from pandas Series
+            y_min = props["y_min"]
+            y_max = props["y_max"]
+            cy = props["cy"]
+            iyy_g = props["iyy_g"]
 
-            # 3. Get centroid and Iyy from section properties
-            cy = sec.get_cy()  # Centroid y-position
-            iyy_g = sec.get_iyy()  # Moment of inertia about y-axis
-
-            # 4. Calculate extreme fiber distances
-            y_top = y_max - cy
-            y_bottom = cy - y_min
-            y_extent = max(y_top, y_bottom)
-
-            # 5. Calculate section modulus
+            # 3. Calculate section modulus
+            y_extent = max(y_max - cy, cy - y_min)
             zyy = iyy_g / y_extent if y_extent != 0 else 0
 
-            # 6. Populate data (convert to cm units)
+            # 4. Populate data (convert to cm units)
             custom_data.update({
                 "name": st.text_input("Profile Name", "DXF Profile"),
-                "depth": section_depth,
+                "depth": y_max - y_min,
                 "I": iyy_g / 1e4,  # mm⁴ → cm⁴
-                "Z": zyy / 1e3       # mm³ → cm³
+                "Z": zyy / 1e3     # mm³ → cm³
             })
 
             # Display results
             st.write(f"**Iyy:** {iyy_g:,.2f} mm⁴ ({custom_data['I']:,.2f} cm⁴)")
             st.write(f"**Zyy:** {zyy:,.2f} mm³ ({custom_data['Z']:,.2f} cm³)")
-            st.write(f"**Depth:** {section_depth:.1f} mm")
+            st.write(f"**Depth:** {custom_data['depth']:.1f} mm")
 
         except Exception as e:
             st.error(f"DXF processing failed: {str(e)}")
