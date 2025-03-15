@@ -90,37 +90,31 @@ def process_dxf_profile():
             geom = Geometry.from_dxf(tmp_filename)
             geom.create_mesh(mesh_sizes=[1.0])
             sec = Section(geom)
-            sec.calculate_geometric_properties()
-            sec.calculate_elastic_moduli()
+            sec.calculate_geometric_properties()  # This calculates ALL basic properties
 
-            # Get Iyy directly from section properties (mm⁴)
+            # Direct property access (Iyy in mm⁴)
             iyy_g = sec.iyy_g
 
-            # Get Zyy using the preferred method (mm³)
-            try:
-                # New API: Use elastic moduli dictionary
-                elastic_moduli = sec.get_elastic_moduli()
-                zyy = max(elastic_moduli["zyy_plus"], elastic_moduli["zyy_minus"])
-            except (AttributeError, KeyError):
-                # Fallback: Calculate manually using centroid to extreme fiber
-                y_extent = max(sec.cy, sec.y_max - sec.cy)
-                zyy = iyy_g / y_extent if y_extent != 0 else 0
+            # Get extreme fiber distances from centroid
+            y_top = sec.y_max - sec.cy  # Distance to top fiber
+            y_bottom = sec.cy - sec.y_min  # Distance to bottom fiber
+            y_extent = max(y_top, y_bottom)  # Use largest distance
 
-            # Get section depth for reference (mm)
-            section_depth = sec.y_max - sec.y_min
+            # Calculate Zyy manually (mm³)
+            zyy = iyy_g / y_extent if y_extent != 0 else 0
 
             # Populate data (convert to cm units)
             custom_data.update({
                 "name": st.text_input("Profile Name", "DXF Profile"),
-                "depth": section_depth,
+                "depth": sec.y_max - sec.y_min,
                 "I": iyy_g / 1e4,  # mm⁴ → cm⁴
-                "Z": zyy / 1e3    # mm³ → cm³
+                "Z": zyy / 1e3     # mm³ → cm³
             })
 
             # Display results
             st.write(f"**Iyy:** {iyy_g:,.2f} mm⁴ ({custom_data['I']:,.2f} cm⁴)")
             st.write(f"**Zyy:** {zyy:,.2f} mm³ ({custom_data['Z']:,.2f} cm³)")
-            st.write(f"**Depth:** {section_depth:.1f} mm")
+            st.write(f"**Depth:** {custom_data['depth']:.1f} mm")
 
         except Exception as e:
             st.error(f"DXF processing failed: {str(e)}")
