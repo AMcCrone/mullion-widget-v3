@@ -42,8 +42,8 @@ def get_custom_profile():
             
             # Get properties for rotated section (now using Y-axis properties)
             iyy = sec.get_ic()[1]  # Second moment of area about Y-axis
-            zyy_plus, _, zyy_minus, _ = sec.get_z()  # Get Y-axis moduli
-            zyy = min(zyy_plus, zyy_minus)  # Conservative value
+            zxx_plus, _, zxx_minus, _ = sec.get_z()  # Get Y-axis moduli
+            zyy = min(zxx_plus, zxx_minus)  # Conservative value
             
             # Update data with converted units
             custom_data.update({
