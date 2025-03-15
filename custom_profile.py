@@ -12,8 +12,8 @@ def get_custom_profile():
         "type": "dxf",
         "name": "DXF Profile",
         "depth": 150.0,  # Default value
-        "Z": 0.0,
-        "I": 0.0
+        "Z": 1.0,
+        "I": 1.0
     }
     
     # Input fields on one line
@@ -35,7 +35,7 @@ def get_custom_profile():
         try:
             # Process DXF
             geom = Geometry.from_dxf(dxf_filepath=tmp_filename)
-            geom.create_mesh(mesh_sizes=[2.0])
+            geom.create_mesh(mesh_sizes=[5])
             sec = Section(geometry=geom)
             sec.calculate_geometric_properties()
 
