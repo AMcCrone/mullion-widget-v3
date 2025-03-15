@@ -76,7 +76,7 @@ def get_custom_profile():
     return custom_data
 
 def process_dxf_profile():
-    """Process a DXF file to extract section properties."""
+    """Process DXF file to extract Iyy and Zyy."""
     custom_data = {"type": "dxf"}
     uploaded_file = st.file_uploader("Upload DXF File", type=["dxf"])
     
@@ -84,44 +84,46 @@ def process_dxf_profile():
         with tempfile.NamedTemporaryFile(delete=False, suffix=".dxf") as tmp_file:
             tmp_file.write(uploaded_file.getbuffer())
             tmp_filename = tmp_file.name
+            
         try:
-            geom = Geometry.from_dxf(dxf_filepath=tmp_filename)
+            # Create geometry and calculate properties
+            geom = Geometry.from_dxf(tmp_filename)
             geom.create_mesh(mesh_sizes=[1.0])
-            sec = Section(geometry=geom)
+            sec = Section(geom)
             sec.calculate_geometric_properties()
-            
-            # Access geometric properties directly
-            ixx_g = sec.ixx_g
+            sec.calculate_elastic_moduli()
+
+            # Get Iyy directly from section properties (mm⁴)
             iyy_g = sec.iyy_g
-            ixy_g = sec.ixy_g  # Not used but kept for reference
-            
-            # Calculate section depth from extents
-            extents = geom.calculate_extents()
-            x_min, y_min = extents[0]
-            x_max, y_max = extents[1]
-            section_depth = y_max - y_min  # in mm
-            
-            # Attempt to get elastic section modulus
+
+            # Get Zyy using the preferred method (mm³)
             try:
+                # New API: Use elastic moduli dictionary
                 elastic_moduli = sec.get_elastic_moduli()
-                Z = elastic_moduli.get('zyy', iyy_g / (section_depth / 2) if section_depth else 0)
-            except AttributeError:
-                Z = iyy_g / (section_depth / 2) if section_depth else 0
-            
-            # Populate custom_data
-            custom_data["name"] = st.text_input("Profile Name", value="DXF Profile")
-            custom_data["depth"] = section_depth
-            custom_data["I"] = iyy_g / 1e4  # Convert to cm^4
-            custom_data["Z"] = Z / 1e3  # Convert to cm^3
-            
+                zyy = max(elastic_moduli["zyy_plus"], elastic_moduli["zyy_minus"])
+            except (AttributeError, KeyError):
+                # Fallback: Calculate manually using centroid to extreme fiber
+                y_extent = max(sec.cy, sec.y_max - sec.cy)
+                zyy = iyy_g / y_extent if y_extent != 0 else 0
+
+            # Get section depth for reference (mm)
+            section_depth = sec.y_max - sec.y_min
+
+            # Populate data (convert to cm units)
+            custom_data.update({
+                "name": st.text_input("Profile Name", "DXF Profile"),
+                "depth": section_depth,
+                "I": iyy_g / 1e4,  # mm⁴ → cm⁴
+                "Z": zyy / 1e3    # mm³ → cm³
+            })
+
             # Display results
-            st.write("**Calculated Section Properties from DXF:**")
-            st.write(f"Section Depth: **{section_depth:.2f} mm**")
-            st.write(f"Moment of Inertia (Iyy): **{iyy_g:.2f} mm⁴** (or **{custom_data['I']:.2f} cm⁴**)")
-            st.write(f"Section Modulus (Z): **{Z:.2f} mm³** (or **{custom_data['Z']:.2f} cm³**)")
-            
+            st.write(f"**Iyy:** {iyy_g:,.2f} mm⁴ ({custom_data['I']:,.2f} cm⁴)")
+            st.write(f"**Zyy:** {zyy:,.2f} mm³ ({custom_data['Z']:,.2f} cm³)")
+            st.write(f"**Depth:** {section_depth:.1f} mm")
+
         except Exception as e:
-            st.error(f"Error processing DXF file: {e}")
+            st.error(f"DXF processing failed: {str(e)}")
             custom_data = {"type": "none"}
         finally:
             os.remove(tmp_filename)
