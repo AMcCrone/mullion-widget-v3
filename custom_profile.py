@@ -75,58 +75,59 @@ def get_custom_profile():
     
     return custom_data
 
-def process_dxf_profile():
-    """Process DXF file to extract Iyy and Zyy."""
-    custom_data = {"type": "dxf"}
-    uploaded_file = st.file_uploader("Upload DXF File", type=["dxf"])
+from sectionproperties.pre.library.steel_sections import rectangular_hollow_section
+
+def process_rhs_profile():
+    """Process RHS parameters to calculate section properties."""
+    custom_data = {"type": "rhs"}
     
-    if uploaded_file is not None:
-        with tempfile.NamedTemporaryFile(delete=False, suffix=".dxf") as tmp_file:
-            tmp_file.write(uploaded_file.getbuffer())
-            tmp_filename = tmp_file.name
-            
-        try:
-            # 1. Create geometry and calculate properties
-            geom = Geometry.from_dxf(tmp_filename)
-            geom.create_mesh(mesh_sizes=[1.0])
-            sec = Section(geom)
-            sec.calculate_geometric_properties()
+    with st.expander("RHS Dimensions", expanded=True):
+        col1, col2, col3 = st.columns(3)
+        with col1:
+            d = st.number_input("Depth (mm)", min_value=50.0, max_value=500.0, value=150.0, step=1.0)
+        with col2:
+            b = st.number_input("Width (mm)", min_value=50.0, max_value=500.0, value=100.0, step=1.0)
+        with col3:
+            t = st.number_input("Thickness (mm)", min_value=1.0, max_value=25.0, value=5.0, step=0.5)
 
-            # 2. Get properties through calculated attributes
-            iyy_g = sec.iyy_g  # Moment of inertia
-            cy = sec.cy        # Centroid y-position
+    try:
+        # Create RHS geometry
+        geometry = rectangular_hollow_section(
+            d=d,
+            b=b,
+            t=t,
+            r_out=2*t,  # Standard outer radius
+            n_r=8        # Points on radius
+        )
+        
+        # Create mesh and section
+        geometry.create_mesh(mesh_sizes=[1])
+        sec = Section(geometry)
+        sec.calculate_geometric_properties()
+        
+        # Calculate section properties
+        iyy_g = sec.iyy_g  # mm^4
+        cy = sec.cy        # Centroid y-position
+        
+        # Calculate section modulus (Z = I / y)
+        y_extent = max(sec.y_max - cy, cy - sec.y_min)
+        zyy = iyy_g / y_extent if y_extent != 0 else 0
 
-            # 3. Get extents from geometry points
-            all_points = geom.points  # Get all vertices in the geometry
-            y_coords = [p[1] for p in all_points]  # Extract Y-coordinates
-            y_min = min(y_coords)
-            y_max = max(y_coords)
-            section_depth = y_max - y_min
+        # Populate data (convert to cm units)
+        custom_data.update({
+            "name": st.text_input("Profile Name", value=f"RHS {d}x{b}x{t}"),
+            "depth": d,
+            "I": iyy_g / 1e4,  # Convert mm⁴ to cm⁴
+            "Z": zyy / 1e3     # Convert mm³ to cm³
+        })
 
-            # 4. Calculate section modulus
-            y_extent = max(y_max - cy, cy - y_min)
-            zyy = iyy_g / y_extent if y_extent != 0 else 0
+        st.write(f"**Calculated Properties:**")
+        st.write(f"- Moment of Inertia (Iyy): {custom_data['I']:.1f} cm⁴")
+        st.write(f"- Section Modulus (Zyy): {custom_data['Z']:.1f} cm³")
 
-            # 5. Populate data (convert to cm units)
-            custom_data.update({
-                "name": st.text_input("Profile Name", "DXF Profile"),
-                "depth": section_depth,
-                "I": iyy_g / 1e4,  # mm⁴ → cm⁴
-                "Z": zyy / 1e3     # mm³ → cm³
-            })
-
-            # Display results
-            st.write(f"**Iyy:** {iyy_g:,.2f} mm⁴ ({custom_data['I']:,.2f} cm⁴)")
-            st.write(f"**Zyy:** {zyy:,.2f} mm³ ({custom_data['Z']:,.2f} cm³)")
-            st.write(f"**Depth:** {section_depth:.1f} mm")
-
-        except Exception as e:
-            st.error(f"DXF processing failed: {str(e)}")
-            st.write("Common issues: 1) Open contours in DXF, 2) Self-intersecting geometry, 3) Units not in mm")
-            custom_data = {"type": "none"}
-        finally:
-            os.remove(tmp_filename)
-    else:
+    except Exception as e:
+        st.error(f"Invalid dimensions: {e}")
+        st.write("Common issues: Wall thickness too large for dimensions")
         custom_data = {"type": "none"}
     
     return custom_data
