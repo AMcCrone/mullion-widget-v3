@@ -35,26 +35,26 @@ def get_custom_profile():
         try:
             # Load and rotate geometry
             geom = Geometry.from_dxf(dxf_filepath=tmp_filename)
-            geom = geom.rotate_section(angle=90)  # Physical rotation
+            geom = geom.rotate_section(angle=-90)  # Clockwise rotation for mullion view
             geom.create_mesh(mesh_sizes=[10.0])
             sec = Section(geometry=geom)
             sec.calculate_geometric_properties()
-
-            # Get properties from rotated section
-            ixx = sec.get_ic()[0]  # Now corresponds to original vertical axis
-            zxx_plus, zxx_minus, *_ = sec.get_z()
-            zxx = min(zxx_plus, zxx_minus)
-
+            
+            # Get properties for rotated section (now using Y-axis properties)
+            iyy = sec.get_ic()[1]  # Second moment of area about Y-axis
+            zyy_plus, _, zyy_minus, _ = sec.get_z()  # Get Y-axis moduli
+            zyy = min(zyy_plus, zyy_minus)  # Conservative value
+            
             # Update data with converted units
             custom_data.update({
-                "I": ixx / 1e4,  # mm⁴ → cm⁴
-                "Z": zxx / 1e3    # mm³ → cm³
+                "I": iyy / 1e4,  # mm⁴ → cm⁴
+                "Z": zyy / 1e3    # mm³ → cm³
             })
 
             # Create landscape plot
             fig, ax = plt.subplots(figsize=(10, 5))  # Wider aspect ratio
             sec.plot_mesh(materials=False, ax=ax)
-            ax.set_title("Mullion Cross-Section (Rotated 90°)")
+            ax.set_title(f"Finite Element Mesh Plot of {custom_data['name']} Cross Section")
             ax.set_aspect("equal")
             ax.set_xlabel("Height")
             ax.set_ylabel("Width")
@@ -65,9 +65,9 @@ def get_custom_profile():
             st.write("**Structural Properties:**")
             col1, col2 = st.columns(2)
             with col1:
-                st.metric("Moment of Inertia (Ixx)", f"{custom_data['I']:.1f} cm⁴")
+                st.metric("Moment of Inertia (Ixx)", f"{custom_data['I']:.2f} cm⁴")
             with col2:
-                st.metric("Section Modulus (Zxx)", f"{custom_data['Z']:.1f} cm³")
+                st.metric("Section Modulus (Zxx)", f"{custom_data['Z']:.2f} cm³")
 
         except Exception as e:
             st.error(f"Processing Error: {str(e)}")
