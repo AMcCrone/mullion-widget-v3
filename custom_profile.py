@@ -81,72 +81,51 @@ def process_dxf_profile():
     uploaded_file = st.file_uploader("Upload DXF File", type=["dxf"])
     
     if uploaded_file is not None:
-        # Write the uploaded DXF to a temporary file
         with tempfile.NamedTemporaryFile(delete=False, suffix=".dxf") as tmp_file:
             tmp_file.write(uploaded_file.getbuffer())
             tmp_filename = tmp_file.name
         try:
-            # Use the updated sectionproperties API
             geom = Geometry.from_dxf(dxf_filepath=tmp_filename)
-            geom.create_mesh(mesh_sizes=[1.0])  # Default mesh size
+            geom.create_mesh(mesh_sizes=[1.0])
             sec = Section(geometry=geom)
-            
-            # Calculate geometric properties
             sec.calculate_geometric_properties()
             
-            # Get moment of inertia
-            ixx_g, iyy_g, ixy_g = sec.get_ig()
+            # Access geometric properties directly
+            ixx_g = sec.ixx_g
+            iyy_g = sec.iyy_g
+            ixy_g = sec.ixy_g  # Not used but kept for reference
             
-            # Calculate section depth
+            # Calculate section depth from extents
             extents = geom.calculate_extents()
             x_min, y_min = extents[0]
             x_max, y_max = extents[1]
             section_depth = y_max - y_min  # in mm
             
-            # Get section modulus - try different API approaches
+            # Attempt to get elastic section modulus
             try:
-                # First approach: Try to get elastic section moduli if available
                 elastic_moduli = sec.get_elastic_moduli()
-                if isinstance(elastic_moduli, dict) and 'zyy' in elastic_moduli:
-                    Z = elastic_moduli['zyy']
-                else:
-                    # Fallback to manual calculation
-                    Z = iyy_g / (section_depth / 2) if section_depth != 0 else 0
-            except (AttributeError, TypeError):
-                # If get_elastic_moduli() doesn't exist or returns unexpected format
-                try:
-                    # Second approach: Try accessing z directly
-                    Z = sec.z
-                except AttributeError:
-                    # Final fallback: manual calculation
-                    Z = iyy_g / (section_depth / 2) if section_depth != 0 else 0
+                Z = elastic_moduli.get('zyy', iyy_g / (section_depth / 2) if section_depth else 0)
+            except AttributeError:
+                Z = iyy_g / (section_depth / 2) if section_depth else 0
             
-            # Let the user give a profile name
+            # Populate custom_data
             custom_data["name"] = st.text_input("Profile Name", value="DXF Profile")
             custom_data["depth"] = section_depth
-            # Convert Iyy from mm^4 to cm^4 (divide by 1e4)
-            custom_data["I"] = iyy_g / 1e4  
-            # Convert Z from mm^3 to cm^3 (divide by 1e3)
-            custom_data["Z"] = Z / 1e3  
+            custom_data["I"] = iyy_g / 1e4  # Convert to cm^4
+            custom_data["Z"] = Z / 1e3  # Convert to cm^3
             
+            # Display results
             st.write("**Calculated Section Properties from DXF:**")
             st.write(f"Section Depth: **{section_depth:.2f} mm**")
             st.write(f"Moment of Inertia (Iyy): **{iyy_g:.2f} mm⁴** (or **{custom_data['I']:.2f} cm⁴**)")
             st.write(f"Section Modulus (Z): **{Z:.2f} mm³** (or **{custom_data['Z']:.2f} cm³**)")
             
-            # Display a debug message
-            st.write("**API Methods Available:**")
-            method_list = [method for method in dir(sec) if not method.startswith('_')]
-            st.write(", ".join(method_list))
-            
         except Exception as e:
             st.error(f"Error processing DXF file: {e}")
-            st.write(f"Error details: {str(e)}")
             custom_data = {"type": "none"}
         finally:
             os.remove(tmp_filename)
     else:
-        # If no file is uploaded, set type to none
         custom_data = {"type": "none"}
     
     return custom_data
