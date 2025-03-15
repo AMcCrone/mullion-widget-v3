@@ -13,59 +13,62 @@ import matplotlib.pyplot as plt
 from sectionproperties.analysis.section import Section
 
 def process_rhs_profile():
-    """Process RHS parameters and plot section."""
+    """Process RHS parameters and plot section with mesh."""
     from sectionproperties.pre.library.steel_sections import rectangular_hollow_section
 
     custom_data = {"type": "rhs"}
     
-    with st.expander("RHS Dimensions", expanded=True):
-        col1, col2, col3 = st.columns(3)
-        with col1:
-            d = st.number_input("Depth (mm)", min_value=50.0, max_value=500.0, value=150.0, step=1.0)
-        with col2:
-            b = st.number_input("Width (mm)", min_value=50.0, max_value=500.0, value=100.0, step=1.0)
-        with col3:
-            t = st.number_input("Thickness (mm)", min_value=1.0, max_value=25.0, value=5.0, step=0.5)
+    # Input controls without nested expander
+    col1, col2, col3 = st.columns(3)
+    with col1:
+        d = st.number_input("Depth (mm)", min_value=50.0, max_value=500.0, value=150.0, step=1.0)
+    with col2:
+        b = st.number_input("Width (mm)", min_value=50.0, max_value=500.0, value=100.0, step=1.0)
+    with col3:
+        t = st.number_input("Thickness (mm)", min_value=1.0, max_value=25.0, value=5.0, step=0.5)
 
+    plot_col, data_col = st.columns([2, 1])
+    
     try:
-        # Create and plot geometry
+        # Generate geometry and mesh
         geometry = rectangular_hollow_section(d=d, b=b, t=t, r_out=2*t, n_r=8)
         geometry.create_mesh(mesh_sizes=[5.0])
         
-        # Create figure
-        fig, ax = plt.subplots()
-        geometry.plot_geometry(label_axes=False, ax=ax)
-        geometry.plot_mesh(materials=False, ax=ax)
-        ax.set_title(f"RHS {d}x{b}x{t} Cross-Section")
-        st.pyplot(fig)
-        plt.close(fig)  # Prevent memory leaks
+        # Create plot in left column
+        with plot_col:
+            fig, ax = plt.subplots(figsize=(6, 4))
+            geometry.plot_geometry(label_axes=False, ax=ax)
+            geometry.plot_mesh(materials=False, ax=ax)
+            ax.set_title(f"RHS {d}x{b}x{t}")
+            st.pyplot(fig)
+            plt.close(fig)
 
-        # Calculate properties
-        sec = Section(geometry)
-        sec.calculate_geometric_properties()
-        
-        iyy_g = sec.iyy_g
-        cy = sec.cy
-        y_extent = max(sec.y_max - cy, cy - sec.y_min)
-        zyy = iyy_g / y_extent if y_extent != 0 else 0
+        # Show properties in right column
+        with data_col:
+            sec = Section(geometry)
+            sec.calculate_geometric_properties()
+            
+            iyy_g = sec.iyy_g
+            cy = sec.cy
+            y_extent = max(sec.y_max - cy, cy - sec.y_min)
+            zyy = iyy_g / y_extent if y_extent != 0 else 0
 
-        custom_data.update({
-            "name": st.text_input("Profile Name", value=f"RHS {d}x{b}x{t}"),
-            "depth": d,
-            "I": iyy_g / 1e4,
-            "Z": zyy / 1e3
-        })
+            custom_data.update({
+                "name": st.text_input("Profile Name", value=f"RHS {d}x{b}x{t}"),
+                "depth": d,
+                "I": iyy_g / 1e4,
+                "Z": zyy / 1e3
+            })
+            
+            st.metric("Moment of Inertia", f"{custom_data['I']:.1f} cm⁴")
+            st.metric("Section Modulus", f"{custom_data['Z']:.1f} cm³")
 
-        st.success(f"Valid RHS section generated")
-        st.write(f"**Moment of Inertia (Iyy):** {custom_data['I']:.1f} cm⁴")
-        st.write(f"**Section Modulus (Zyy):** {custom_data['Z']:.1f} cm³")
+        return custom_data
 
     except Exception as e:
         st.error(f"Section generation failed: {str(e)}")
-        st.write("Common causes: Wall thickness too large for dimensions")
-        custom_data = {"type": "none"}
-    
-    return custom_data
+        st.write("Common causes:\n- Wall thickness too large for dimensions\n- Invalid geometry parameters")
+        return {"type": "none"}
 
 # ---------------------------
 # Authentication & Page Config
