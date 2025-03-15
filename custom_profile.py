@@ -12,8 +12,8 @@ def get_custom_profile():
         "type": "dxf",
         "name": "DXF Profile",
         "depth": 150.0,
-        "Z": 0.0,
-        "I": 0.0
+        "Z": 1.0,
+        "I": 1.0
     }
     
     # Input row at top
