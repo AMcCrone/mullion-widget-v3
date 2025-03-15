@@ -79,7 +79,7 @@ with st.expander("Custom Profile Settings", expanded=False):
     custom_section_data = {}
     
     if custom_option == "Manual Input":
-        col1, col2, col3, col4 = st.columns(4)
+         col1, col2, col3, col4 = st.columns(4)
          with col1:
              name = st.text_input("Profile Name", value="Custom Profile")
          with col2:
