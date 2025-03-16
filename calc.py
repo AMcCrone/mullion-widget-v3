@@ -346,8 +346,8 @@ def generate_section_database(
                 else:
                     # Failing non-custom: consistent styling
                     # Use rgba for background with 0.2 opacity
-                    orange_rgb = TT_Orange.strip("rgb()").split(",")
-                    styles = [f'background-color: rgba({",".join(orange_rgb)},0.2); color: {TT_Orange}'] * len(row)
+                    orange_rgba = "rgba(211,69,29,0.2)"
+                    styles = [f'background-color: {orange_rgba}; color: {TT_Orange}'] * len(row)
             
             return styles
         
