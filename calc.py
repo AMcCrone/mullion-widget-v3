@@ -316,49 +316,49 @@ def generate_section_database(
     
     # Create a styled dataframe for display
     def style_dataframe(dataframe):
-    # Count passing sections for gradient calculation
-    pass_count = len(df_pass)
-    first_fail_index = pass_count  # Index of the first failing section
-    
-    # Define colors
-    TT_Orange = "rgb(237,125,49)"  # Full opacity
-    TT_DarkBlue = "rgb(0,61,114)"  # Full opacity
-    white_text = "color: white;"
-    
-    # Define the style function for each row
-    def row_style(row):
-        styles = []
+        # Count passing sections for gradient calculation
+        pass_count = len(df_pass)
+        first_fail_index = pass_count  # Index of the first failing section
         
-        # Check if it's a custom section
-        is_custom = row["Supplier"] == "Custom"
+        # Define colors
+        TT_Orange = "rgb(237,125,49)"  # Full opacity
+        TT_DarkBlue = "rgb(0,61,114)"  # Full opacity
+        white_text = "color: white;"
         
-        if is_custom:
-            # Custom section styling
-            if row.name < pass_count:  # Passing custom
-                bg_color = f'background-color: {TT_DarkBlue};'
-            else:  # Failing custom
-                bg_color = f'background-color: {TT_Orange};'
-            styles = [bg_color + white_text] * len(row)
-        else:
-            # Original gradient styling for non-custom sections
-            if row.name < pass_count:
-                light_blue = tuple(int(x) for x in TT_LightBlue.replace("rgb(", "").replace(")", "").split(","))
-                mid_blue = tuple(int(x) for x in TT_MidBlue.replace("rgb(", "").replace(")", "").split(","))
-                
-                ratio = row.name / max(1, pass_count - 1)
-                r = int(light_blue[0] + (mid_blue[0] - light_blue[0]) * ratio)
-                g = int(light_blue[1] + (mid_blue[1] - light_blue[1]) * ratio)
-                b = int(light_blue[2] + (mid_blue[2] - light_blue[2]) * ratio)
-                
-                styles = [f'background-color: rgba({r},{g},{b},0.2)'] * len(row)
+        # Define the style function for each row
+        def row_style(row):
+            styles = []
+            
+            # Check if it's a custom section
+            is_custom = row["Supplier"] == "Custom"
+            
+            if is_custom:
+                # Custom section styling
+                if row.name < pass_count:  # Passing custom
+                    bg_color = f'background-color: {TT_DarkBlue};'
+                else:  # Failing custom
+                    bg_color = f'background-color: {TT_Orange};'
+                styles = [bg_color + white_text] * len(row)
             else:
-                # Original fail styling for non-custom
-                styles = [f'background-color: {TT_Orange}; opacity: 0.2'] * len(row)
+                # Original gradient styling for non-custom sections
+                if row.name < pass_count:
+                    light_blue = tuple(int(x) for x in TT_LightBlue.replace("rgb(", "").replace(")", "").split(","))
+                    mid_blue = tuple(int(x) for x in TT_MidBlue.replace("rgb(", "").replace(")", "").split(","))
+                    
+                    ratio = row.name / max(1, pass_count - 1)
+                    r = int(light_blue[0] + (mid_blue[0] - light_blue[0]) * ratio)
+                    g = int(light_blue[1] + (mid_blue[1] - light_blue[1]) * ratio)
+                    b = int(light_blue[2] + (mid_blue[2] - light_blue[2]) * ratio)
+                    
+                    styles = [f'background-color: rgba({r},{g},{b},0.2)'] * len(row)
+                else:
+                    # Original fail styling for non-custom
+                    styles = [f'background-color: {TT_Orange}; opacity: 0.2'] * len(row)
+            
+            return styles
         
-        return styles
-    
-    # Apply the styling
-    return dataframe.style.apply(row_style, axis=1)
+        # Apply the styling
+        return dataframe.style.apply(row_style, axis=1)
     
     # Apply styling to the dataframe
     styled_df = style_dataframe(df_display)
