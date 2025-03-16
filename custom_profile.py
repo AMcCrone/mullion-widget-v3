@@ -36,7 +36,7 @@ def get_custom_profile():
             # Load and rotate geometry
             geom = Geometry.from_dxf(dxf_filepath=tmp_filename)
             geom = geom.rotate_section(angle=-90)  # Clockwise rotation for mullion view
-            geom.create_mesh(mesh_sizes=[10.0])
+            geom.create_mesh(mesh_sizes=[5.0])
             sec = Section(geometry=geom)
             sec.calculate_geometric_properties()
             
