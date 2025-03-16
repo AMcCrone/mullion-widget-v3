@@ -135,5 +135,6 @@ st.dataframe(df_display, height=500)
 # ---------------------------
 # Documentation Section
 # ---------------------------
-with st.expander("The Boring Stuff...", expanded=False):
+st.title("The Boring Stuff...")
+with st.expander("Documentation", expanded=False):
     render_documentation()
