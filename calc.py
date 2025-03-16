@@ -328,12 +328,12 @@ def generate_section_database(
             # Custom section styling
             if is_custom:
                 bg_color = TT_DarkBlue if is_passing else TT_Orange
-                styles = [f'background-color: {bg_color}; opacity: 1; color: white'] * len(row)
+                styles = [f'background-color: {bg_color}; color: white'] * len(row)
             
             # Non-custom sections
             else:
                 if is_passing:
-                    # Original gradient with 0.2 opacity
+                    # Gradient with consistent opacity
                     light_blue = tuple(int(x) for x in TT_LightBlue.strip("rgb()").split(","))
                     mid_blue = tuple(int(x) for x in TT_MidBlue.strip("rgb()").split(","))
                     
@@ -344,8 +344,10 @@ def generate_section_database(
                     
                     styles = [f'background-color: rgba({r},{g},{b},0.2)'] * len(row)
                 else:
-                    # Failing non-custom: orange background (0.2 opacity) with orange text
-                    styles = [f'background-color: {TT_Orange}; opacity: 0.2; color: {TT_Orange}'] * len(row)
+                    # Failing non-custom: consistent styling
+                    # Use rgba for background with 0.2 opacity
+                    orange_rgb = TT_Orange.strip("rgb()").split(",")
+                    styles = [f'background-color: rgba({",".join(orange_rgb)},0.2); color: {TT_Orange}'] * len(row)
             
             return styles
         
