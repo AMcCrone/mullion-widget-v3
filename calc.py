@@ -318,30 +318,24 @@ def generate_section_database(
     def style_dataframe(dataframe):
         # Count passing sections for gradient calculation
         pass_count = len(df_pass)
-        first_fail_index = pass_count  # Index of the first failing section
-        
-        # Define colors
-        white_text = "color: white;"
         
         # Define the style function for each row
         def row_style(row):
             styles = []
-            
-            # Check if it's a custom section
             is_custom = row["Supplier"] == "Custom"
+            is_passing = row.name < pass_count
             
+            # Custom section styling
             if is_custom:
-                # Custom section styling
-                if row.name < pass_count:  # Passing custom
-                    bg_color = f'background-color: {TT_DarkBlue};'
-                else:  # Failing custom
-                    bg_color = f'background-color: {TT_Orange};'
-                styles = [bg_color + white_text] * len(row)
+                bg_color = TT_DarkBlue if is_passing else TT_Orange
+                styles = [f'background-color: {bg_color}; opacity: 1; color: white'] * len(row)
+            
+            # Non-custom sections
             else:
-                # Original gradient styling for non-custom sections
-                if row.name < pass_count:
-                    light_blue = tuple(int(x) for x in TT_LightBlue.replace("rgb(", "").replace(")", "").split(","))
-                    mid_blue = tuple(int(x) for x in TT_MidBlue.replace("rgb(", "").replace(")", "").split(","))
+                if is_passing:
+                    # Original gradient with 0.2 opacity
+                    light_blue = tuple(int(x) for x in TT_LightBlue.strip("rgb()").split(","))
+                    mid_blue = tuple(int(x) for x in TT_MidBlue.strip("rgb()").split(","))
                     
                     ratio = row.name / max(1, pass_count - 1)
                     r = int(light_blue[0] + (mid_blue[0] - light_blue[0]) * ratio)
@@ -350,12 +344,11 @@ def generate_section_database(
                     
                     styles = [f'background-color: rgba({r},{g},{b},0.2)'] * len(row)
                 else:
-                    # Original fail styling for non-custom
-                    styles = [f'background-color: {TT_Orange}; opacity: 0.2'] * len(row)
+                    # Failing non-custom: orange background (0.2 opacity) with orange text
+                    styles = [f'background-color: {TT_Orange}; opacity: 0.2; color: {TT_Orange}'] * len(row)
             
             return styles
         
-        # Apply the styling
         return dataframe.style.apply(row_style, axis=1)
     
     # Apply styling to the dataframe
