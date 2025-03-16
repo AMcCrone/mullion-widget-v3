@@ -316,39 +316,49 @@ def generate_section_database(
     
     # Create a styled dataframe for display
     def style_dataframe(dataframe):
-        # Count passing sections for gradient calculation
-        pass_count = len(df_pass)
-        first_fail_index = pass_count  # Index of the first failing section
+    # Count passing sections for gradient calculation
+    pass_count = len(df_pass)
+    first_fail_index = pass_count  # Index of the first failing section
+    
+    # Define colors
+    TT_Orange = "rgb(237,125,49)"  # Full opacity
+    TT_DarkBlue = "rgb(0,61,114)"  # Full opacity
+    white_text = "color: white;"
+    
+    # Define the style function for each row
+    def row_style(row):
+        styles = []
         
-        # Define the style function for each row
-        def row_style(row):
-            # Parse RGB values from color strings
-            light_blue = tuple(int(x) for x in TT_LightBlue.replace("rgb(", "").replace(")", "").split(","))
-            mid_blue = tuple(int(x) for x in TT_MidBlue.replace("rgb(", "").replace(")", "").split(","))
-            
-            styles = []
-            # Check if row is passing or failing
+        # Check if it's a custom section
+        is_custom = row["Supplier"] == "Custom"
+        
+        if is_custom:
+            # Custom section styling
+            if row.name < pass_count:  # Passing custom
+                bg_color = f'background-color: {TT_DarkBlue};'
+            else:  # Failing custom
+                bg_color = f'background-color: {TT_Orange};'
+            styles = [bg_color + white_text] * len(row)
+        else:
+            # Original gradient styling for non-custom sections
             if row.name < pass_count:
-                # Create gradient for passing sections
-                ratio = row.name / max(1, pass_count - 1)  # Avoid division by zero
+                light_blue = tuple(int(x) for x in TT_LightBlue.replace("rgb(", "").replace(")", "").split(","))
+                mid_blue = tuple(int(x) for x in TT_MidBlue.replace("rgb(", "").replace(")", "").split(","))
                 
+                ratio = row.name / max(1, pass_count - 1)
                 r = int(light_blue[0] + (mid_blue[0] - light_blue[0]) * ratio)
                 g = int(light_blue[1] + (mid_blue[1] - light_blue[1]) * ratio)
                 b = int(light_blue[2] + (mid_blue[2] - light_blue[2]) * ratio)
                 
-                # Apply background color for passing sections
-                background_style = 'background-color: rgba({},{},{},0.2)'.format(r, g, b)
-                styles = [background_style] * len(row)
+                styles = [f'background-color: rgba({r},{g},{b},0.2)'] * len(row)
             else:
-                # Failing sections get mid blue background with orange text
-                orange = TT_Orange.replace("rgb", "rgba").replace(")", ",0.2)")
-                background_style = 'background-color: {}; color: {}'.format(orange, TT_Orange)
-                styles = [background_style] * len(row)
-            
-            return styles
+                # Original fail styling for non-custom
+                styles = [f'background-color: {TT_Orange}; opacity: 0.2'] * len(row)
         
-        # Apply the styling
-        return dataframe.style.apply(row_style, axis=1)
+        return styles
+    
+    # Apply the styling
+    return dataframe.style.apply(row_style, axis=1)
     
     # Apply styling to the dataframe
     styled_df = style_dataframe(df_display)
