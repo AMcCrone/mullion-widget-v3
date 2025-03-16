@@ -40,15 +40,17 @@ def get_custom_profile():
             sec = Section(geometry=geom)
             sec.calculate_geometric_properties()
             
-            # Get properties for rotated section (now using Y-axis properties)
-            iyy = sec.get_ic()[1]  # Second moment of area about Y-axis
-            _, zyy_plus, _, zyy_minus = sec.get_z()  # Get Y-axis moduli
-            zyy = min(zyy_plus, zyy_minus)  # Conservative value
+            # Get properties for rotated section (-90° rotation swaps axes)
+            iyy = sec.get_ic()[1]  # This is now the MAJOR axis moment of inertia
+            
+            # Get MAJOR axis moduli (first two values after rotation)
+            zxx_plus, zxx_minus, *_ = sec.get_z()  # First 2 values are now major axis
+            zyy = min(zxx_plus, zxx_minus)  # Conservative value
             
             # Update data with converted units
             custom_data.update({
-                "I": iyy / 1e4,  # mm⁴ → cm⁴
-                "Z": zyy / 1e3    # mm³ → cm³
+                "I": iyy / 1e4,  # mm⁴ → cm⁴ (major axis)
+                "Z": zyy / 1e3    # mm³ → cm³ (major axis)
             })
 
             # Create landscape plot
