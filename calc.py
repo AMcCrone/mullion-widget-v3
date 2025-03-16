@@ -321,8 +321,6 @@ def generate_section_database(
         first_fail_index = pass_count  # Index of the first failing section
         
         # Define colors
-        TT_Orange = "rgb(237,125,49)"  # Full opacity
-        TT_DarkBlue = "rgb(0,61,114)"  # Full opacity
         white_text = "color: white;"
         
         # Define the style function for each row
