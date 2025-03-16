@@ -135,4 +135,5 @@ st.dataframe(df_display, height=500)
 # ---------------------------
 # Documentation Section
 # ---------------------------
-render_documentation()
+st.expander("The Boring Stuff...", expanded=False):
+    render_documentation()
