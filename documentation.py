@@ -1,7 +1,6 @@
 import streamlit as st
 
 def render_documentation():
-    st.title("Documentation")
     st.markdown("The following text describes the documentation, limitations, and formulae used in the creation of this **Mullion Check Widget**")
     
     st.header("Stress Calculations")
