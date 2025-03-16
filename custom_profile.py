@@ -44,8 +44,8 @@ def get_custom_profile():
             iyy = sec.get_ic()[1]  # This is now the MAJOR axis moment of inertia
             
             # Get MAJOR axis moduli (first two values after rotation)
-            zxx_plus, zxx_minus, *_ = sec.get_z()  # First 2 values are now major axis
-            zyy = min(zxx_plus, zxx_minus)  # Conservative value
+            _, _, zyy_plus, zyy_minus = sec.get_z()  # First 2 values are now major axis
+            zyy = min(zyy_plus, zyy_minus)  # Conservative value
             
             # Update data with converted units
             custom_data.update({
