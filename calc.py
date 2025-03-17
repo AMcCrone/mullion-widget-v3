@@ -373,4 +373,4 @@ def generate_section_database(
     # Apply styling to the dataframe
     styled_df = style_dataframe(df_display)
     
-    return styled_df, df_display
+    return df_display, styled_df
