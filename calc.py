@@ -118,6 +118,19 @@ def generate_plots(
     E = material_props[plot_material]["E"]
     defl_values = []
     sls_hover = []
+    
+    # Calculate the required moment of inertia based on the deflection limit
+    if SLS_case.startswith("SLS 1"):
+        # For wind load case
+        I_req = (5 * w * L**4) / (384 * E * defl_limit)
+    else:
+        # For barrier load case
+        F_BL = selected_barrier_load * bay
+        I_req = ((F_BL * BARRIER_LENGTH) / (12 * E * defl_limit)) * (0.75 * L**2 - BARRIER_LENGTH**2)
+    
+    # Convert I_req to cm⁴ for display
+    I_req_cm4 = I_req / 10000  # Convert from mm⁴ to cm⁴
+    
     for i in range(len(depths)):
         d_wl = (5 * w * L**4) / (384 * E * Iyy_vals[i])
         F_BL = selected_barrier_load * bay
@@ -165,7 +178,7 @@ def generate_plots(
     sls_fig.update_layout(
         title=(f"{plot_material} SLS Design ({SLS_case})<br>"
                f"WL: {wind_pressure:.2f} kPa, Bay: {bay} mm, L: {L} mm, BL: {selected_barrier_load:.2f} kN/m<br>"
-               f"Defl Limit: {defl_limit:.1f} mm"),
+               f"Defl Limit: {defl_limit:.1f} mm, Req. I: {I_req_cm4:.1f} cm⁴"),
         xaxis_title="Section Depth (mm)",
         yaxis_title="Deflection (mm)",
         xaxis=dict(range=[x_min, x_max]),
