@@ -132,6 +132,13 @@ df_display = generate_section_database(
 st.title("Section Database")
 st.dataframe(df_display, height=500)
 
+# PDF report generation button
+pdf_report = generate_pdf_download_button(
+    wind_pressure, bay_width, mullion_length, selected_barrier_load,
+    ULS_case, SLS_case, plot_material, Z_req_cm3, defl_limit,
+    df_display
+)
+
 # ---------------------------
 # Documentation Section
 # ---------------------------
