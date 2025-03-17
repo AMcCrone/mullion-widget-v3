@@ -125,7 +125,7 @@ with col3:
 # ---------------------------
 # Section Database Table
 # ---------------------------
-df_display, df_raw = generate_section_database(
+df_raw, df_display = generate_section_database(
     df_selected, plot_material, selected_suppliers, custom_section_data, use_custom_section,
     wind_pressure, bay_width, mullion_length, selected_barrier_load, SLS_case, defl_limit, Z_req_cm3
 )
