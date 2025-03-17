@@ -6,7 +6,7 @@ import io
 from auth import authenticate_user
 from config import set_page_config, material_props
 from calc import generate_plots, generate_section_database
-from pdf_export import get_pdf_bytes
+from pdf_export import get_pdf_bytes, generate_pdf_download_button
 from documentation import render_documentation
 from custom_profile import get_custom_profile
 import matplotlib.pyplot as plt
