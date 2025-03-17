@@ -175,7 +175,7 @@ def generate_plots(
         text=np.array(sls_hover)[valid],
         hoverinfo='text'
     ))
-        sls_fig.update_layout(
+    sls_fig.update_layout(
         title={
             'text': (f"{plot_material} SLS Design ({SLS_case})<br>"
                     f"WL: {wind_pressure:.2f} kPa, Bay: {bay} mm, L: {L} mm, BL: {selected_barrier_load:.2f} kN/m<br>"
