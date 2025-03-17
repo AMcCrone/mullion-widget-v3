@@ -175,10 +175,14 @@ def generate_plots(
         text=np.array(sls_hover)[valid],
         hoverinfo='text'
     ))
-    sls_fig.update_layout(
-        title=(f"{plot_material} SLS Design ({SLS_case})<br>"
-               f"WL: {wind_pressure:.2f} kPa, Bay: {bay} mm, L: {L} mm, BL: {selected_barrier_load:.2f} kN/m<br>"
-               f"Defl Limit: {defl_limit:.1f} mm, Req. I: {I_req_cm4:.1f} cm⁴"),
+        sls_fig.update_layout(
+        title={
+            'text': (f"{plot_material} SLS Design ({SLS_case})<br>"
+                    f"WL: {wind_pressure:.2f} kPa, Bay: {bay} mm, L: {L} mm, BL: {selected_barrier_load:.2f} kN/m<br>"
+                    f"Defl Limit: {defl_limit:.1f} mm, Req. I: {I_req_cm4:.1f} cm⁴"),
+            'x': 0.5,
+            'xanchor': 'center'
+        },
         xaxis_title="Section Depth (mm)",
         yaxis_title="Deflection (mm)",
         xaxis=dict(range=[x_min, x_max]),
