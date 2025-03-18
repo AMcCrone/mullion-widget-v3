@@ -8,12 +8,17 @@ from sectionproperties.analysis import Section
 import matplotlib.pyplot as plt
 from main import plot_material
 
-def get_custom_profile():
-    """Process DXF with proper 90° rotation for mullion visualization and compound geometry support"""
+def get_custom_profile(material):
+    """Process DXF with proper 90° rotation for mullion visualization and compound geometry support
     
-    # Get the material selected in the sidebar
-    # This assumes plot_material is defined in main.py as a sidebar selection
-    material_name = plot_material.lower()  # Convert to lowercase for matching
+    Parameters:
+    material (str): Material name ('Aluminium' or 'Steel') to use for all sections
+    """
+    from sectionproperties.pre import Material
+    from sectionproperties.pre.geometry import Geometry, CompoundGeometry
+    
+    # Convert material name to lowercase for dictionary lookup
+    material_name = material.lower()
     
     # Define materials
     DEFAULT_MATERIALS = {
@@ -54,8 +59,7 @@ def get_custom_profile():
                                              value=150.0, step=1.0)
     
     # Main section upload
-    st.subheader("Main Profile")
-    st.set_option("server.maxUploadSize", 1)
+    st.subheader("Main Section")
     uploaded_file = st.file_uploader("Upload Main DXF File", type=["dxf"], key="main_dxf")
     
     # Add reinforcement option
@@ -176,7 +180,7 @@ def get_custom_profile():
                     st.metric("Section Modulus (Zxx)", f"{custom_data['Z']:.2f} cm³")
                 
                 # Display material information
-                st.write(f"**Material:** {plot_material}")
+                st.write(f"**Material:** {material}")
                 st.write(f"**Number of reinforcement sections:** {len(reinforcement_files)}")
                 
         except Exception as e:
