@@ -112,15 +112,8 @@ with st.expander("Custom Profile?", expanded=False):
         # Import the function from your custom_profile.py
         from custom_profile import get_custom_profile
         
-        # Call the function which now handles compound sections internally
-        custom_section_data = get_custom_profile()
-        
-        # The get_custom_profile function now handles:
-        # - Main section upload
-        # - Multiple reinforcement section uploads (if selected)
-        # - Material selection for each section
-        # - Compound geometry creation and analysis
-        # - Returns the necessary data in the expected format
+        # Call the function and pass the material from the sidebar
+        custom_section_data = get_custom_profile(material=plot_material)
 
 use_custom_section = custom_section_data.get("type") in ["manual", "dxf"]
 
