@@ -72,7 +72,7 @@ def get_custom_profile():
         st.subheader("Reinforcement Sections")
         
         # Instead of expanders, use horizontal rules and headings to separate sections
-        for i in range(5):
+        for i in range(4):
             st.markdown(f"#### Reinforcement #{i+1}")
             
             col1, col2 = st.columns([3, 1])
@@ -93,7 +93,7 @@ def get_custom_profile():
                 reinforcement_materials.append(reinf_material)
             
             # Add a separator between reinforcement sections
-            if i < 4:  # Don't show after the last one
+            if i < 3:  # Don't show after the last one
                 st.markdown("---")
     
     # Reference material for transformed properties
