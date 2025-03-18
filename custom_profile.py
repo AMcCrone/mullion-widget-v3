@@ -7,19 +7,18 @@ from sectionproperties.pre.geometry import Geometry, CompoundGeometry
 from sectionproperties.analysis import Section
 import matplotlib.pyplot as plt
 
-def get_custom_profile(material):
-    """Process DXF with proper 90° rotation for mullion visualization and compound geometry support
+def get_custom_profile():
+    """Process DXF with proper 90° rotation for mullion visualization and compound geometry support"""
     
-    Parameters:
-    material (str): Material name ('Aluminium' or 'Steel') to use for all sections
-    """
-    from sectionproperties.pre import Material
-    from sectionproperties.pre.geometry import Geometry, CompoundGeometry
+    custom_data = {
+        "type": "dxf",
+        "name": "DXF Profile",
+        "depth": 150.0,
+        "Z": 1.0,
+        "I": 1.0
+    }
     
-    # Convert material name to lowercase for dictionary lookup
-    material_name = material.lower()
-    
-    # Define materials
+    # Define default materials
     DEFAULT_MATERIALS = {
         "aluminium": Material(
             name="Aluminium",
@@ -39,15 +38,6 @@ def get_custom_profile(material):
         )
     }
     
-    # Create custom data dictionary
-    custom_data = {
-        "type": "dxf",
-        "name": "DXF Profile",
-        "depth": 150.0,
-        "Z": 1.0,
-        "I": 1.0
-    }
-    
     # Input row at top
     col1, col2 = st.columns(2)
     with col1:
@@ -59,46 +49,65 @@ def get_custom_profile(material):
     
     # Main section upload
     st.subheader("Main Section")
-    uploaded_file = st.file_uploader("Upload Main DXF File", type=["dxf"], key="main_dxf")
+    col1, col2 = st.columns([3, 1])
+    with col1:
+        uploaded_file = st.file_uploader("Upload Main DXF File", type=["dxf"], key="main_dxf")
+    with col2:
+        main_material = st.selectbox(
+            "Material",
+            options=list(DEFAULT_MATERIALS.keys()),
+            index=0,
+            key="main_material"
+        )
     
     # Add reinforcement option
     add_reinforcement = st.checkbox("Add Reinforcement Sections", value=False)
     
     # Initialize for reinforcement sections
     reinforcement_files = []
+    reinforcement_materials = []
     
     # Show reinforcement upload options if checkbox is selected
     if add_reinforcement:
         st.subheader("Reinforcement Sections")
-        # Allow up to 5 reinforcement sections without using expanders
-        col1, col2 = st.columns(2)
         
-        with col1:
-            reinf_file1 = st.file_uploader("Upload Reinforcement #1", type=["dxf"], key="reinf_dxf_1")
-            if reinf_file1 is not None:
-                reinforcement_files.append(reinf_file1)
-                
-            reinf_file3 = st.file_uploader("Upload Reinforcement #3", type=["dxf"], key="reinf_dxf_3")
-            if reinf_file3 is not None:
-                reinforcement_files.append(reinf_file3)
-                
-            reinf_file5 = st.file_uploader("Upload Reinforcement #5", type=["dxf"], key="reinf_dxf_5")
-            if reinf_file5 is not None:
-                reinforcement_files.append(reinf_file5)
-        
-        with col2:
-            reinf_file2 = st.file_uploader("Upload Reinforcement #2", type=["dxf"], key="reinf_dxf_2")
-            if reinf_file2 is not None:
-                reinforcement_files.append(reinf_file2)
-                
-            reinf_file4 = st.file_uploader("Upload Reinforcement #4", type=["dxf"], key="reinf_dxf_4")
-            if reinf_file4 is not None:
-                reinforcement_files.append(reinf_file4)
+        # Instead of expanders, use horizontal rules and headings to separate sections
+        for i in range(5):
+            st.markdown(f"#### Reinforcement #{i+1}")
+            
+            col1, col2 = st.columns([3, 1])
+            with col1:
+                reinf_file = st.file_uploader(f"Upload Reinforcement DXF #{i+1}", 
+                                           type=["dxf"], 
+                                           key=f"reinf_dxf_{i}")
+            with col2:
+                reinf_material = st.selectbox(
+                    "Material",
+                    options=list(DEFAULT_MATERIALS.keys()),
+                    index=1 if "steel" in DEFAULT_MATERIALS else 0,
+                    key=f"reinf_material_{i}"
+                )
+            
+            if reinf_file is not None:
+                reinforcement_files.append(reinf_file)
+                reinforcement_materials.append(reinf_material)
+            
+            # Add a separator between reinforcement sections
+            if i < 4:  # Don't show after the last one
+                st.markdown("---")
     
-    # Analysis settings
+    # Reference material for transformed properties
     st.subheader("Analysis Settings")
-    mesh_size = st.slider("Mesh Size", min_value=0.2, max_value=20.0, value=5.0, 
-                        help="Smaller values = finer mesh (slower but more accurate)")
+    col1, col2 = st.columns(2)
+    with col1:
+        ref_material = st.selectbox(
+            "Reference Material for Transformed Properties",
+            options=list(DEFAULT_MATERIALS.keys()),
+            index=0
+        )
+    with col2:
+        mesh_size = st.slider("Mesh Size", min_value=0.2, max_value=20.0, value=5.0, 
+                            help="Smaller values = finer mesh (slower but more accurate)")
     
     # Only proceed if main file is uploaded
     if uploaded_file is not None:
@@ -112,23 +121,25 @@ def get_custom_profile(material):
                 
                 # Create main geometry with selected material
                 main_geom = Geometry.from_dxf(dxf_filepath=main_tmp_path)
-                main_geom.material = DEFAULT_MATERIALS[material_name]
+                main_geom.material = DEFAULT_MATERIALS[main_material]
                 
                 # Initialize compound geometry with main section
                 compound_geom = CompoundGeometry([main_geom])
                 
                 # Add reinforcement sections if any
-                for i, reinf_file in enumerate(reinforcement_files):
+                for i, (reinf_file, reinf_mat) in enumerate(zip(reinforcement_files, reinforcement_materials)):
                     reinf_tmp_path = os.path.join(tmp_dir, f"reinf_{i}.dxf")
                     with open(reinf_tmp_path, 'wb') as f:
                         f.write(reinf_file.getbuffer())
                     
                     reinf_geom = Geometry.from_dxf(dxf_filepath=reinf_tmp_path)
-                    # Use the same material for reinforcements as the main material
-                    reinf_geom.material = DEFAULT_MATERIALS[material_name]
+                    reinf_geom.material = DEFAULT_MATERIALS[reinf_mat]
                     
                     # Add to compound geometry
                     compound_geom += reinf_geom
+                
+                # Get reference material object
+                ref_material_obj = DEFAULT_MATERIALS[ref_material]
                 
                 # Rotate compound geometry 90 degrees clockwise for mullion view
                 compound_geom = compound_geom.rotate_section(angle=-90)
@@ -141,14 +152,14 @@ def get_custom_profile(material):
                 sec.calculate_geometric_properties()
                 sec.calculate_plastic_properties()
                 
-                # Get transformed properties using the same material
+                # Get transformed properties using reference material's elastic modulus
                 # After 90° rotation, what was Iyy is now the major axis (Ixx)
-                ixx, iyy, ixy = sec.get_eic(e_ref=DEFAULT_MATERIALS[material_name])
+                ixx, iyy, ixy = sec.get_eic(e_ref=ref_material_obj)
                 
                 # Get elastic moduli with reference material
                 try:
                     # After rotation, zxx values are now major axis
-                    zxx_plus, zxx_minus, zyy_plus, zyy_minus = sec.get_ez(e_ref=DEFAULT_MATERIALS[material_name])
+                    zxx_plus, zxx_minus, zyy_plus, zyy_minus = sec.get_ez(e_ref=ref_material_obj)
                     section_modulus = min(zxx_plus, zxx_minus)  # Conservative value
                 except (ValueError, TypeError) as e:
                     st.warning(f"Could not calculate section moduli: {str(e)}")
@@ -179,8 +190,12 @@ def get_custom_profile(material):
                     st.metric("Section Modulus (Zxx)", f"{custom_data['Z']:.2f} cm³")
                 
                 # Display material information
-                st.write(f"**Material:** {material}")
-                st.write(f"**Number of reinforcement sections:** {len(reinforcement_files)}")
+                st.write("**Materials Used:**")
+                material_info = f"Main: {main_material.capitalize()}"
+                if reinforcement_files:
+                    material_info += f", Reinforcements: {', '.join(m.capitalize() for m in set(reinforcement_materials))}"
+                st.write(f"Reference Material: {ref_material.capitalize()}")
+                st.write(material_info)
                 
         except Exception as e:
             st.error(f"Processing Error: {str(e)}")
