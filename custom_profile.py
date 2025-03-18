@@ -9,6 +9,8 @@ import matplotlib.pyplot as plt
 
 def get_custom_profile():
     """Process DXF with proper 90° rotation for mullion visualization and compound geometry support"""
+    from sectionproperties.pre import Material
+    from sectionproperties.pre.geometry import Geometry, CompoundGeometry
     
     custom_data = {
         "type": "dxf",
@@ -71,8 +73,8 @@ def get_custom_profile():
     if add_reinforcement:
         st.subheader("Reinforcement Sections")
         
-        # Instead of expanders, use horizontal rules and headings to separate sections
-        for i in range(4):
+        # Use headings and horizontal rules to separate sections
+        for i in range(5):
             st.markdown(f"#### Reinforcement #{i+1}")
             
             col1, col2 = st.columns([3, 1])
@@ -93,21 +95,29 @@ def get_custom_profile():
                 reinforcement_materials.append(reinf_material)
             
             # Add a separator between reinforcement sections
-            if i < 3:  # Don't show after the last one
+            if i < 4:  # Don't show after the last one
                 st.markdown("---")
     
-    # Reference material for transformed properties
-    st.subheader("Analysis Settings")
-    col1, col2 = st.columns(2)
-    with col1:
-        ref_material = st.selectbox(
-            "Reference Material for Transformed Properties",
-            options=list(DEFAULT_MATERIALS.keys()),
-            index=0
-        )
-    with col2:
-        mesh_size = st.slider("Mesh Size", min_value=1.0, max_value=20.0, value=5.0, step=0.5, 
+    # Reference material for transformed properties (only shown if reinforcement is added)
+    if add_reinforcement:
+        st.subheader("Analysis Settings")
+        col1, col2 = st.columns(2)
+        with col1:
+            ref_material = st.selectbox(
+                "Reference Material for Transformed Properties",
+                options=list(DEFAULT_MATERIALS.keys()),
+                index=0
+            )
+        with col2:
+            mesh_size = st.slider("Mesh Size", min_value=0.2, max_value=20.0, value=5.0, 
+                                help="Smaller values = finer mesh (slower but more accurate)")
+    else:
+        # Still need mesh size for single section
+        st.subheader("Analysis Settings")
+        mesh_size = st.slider("Mesh Size", min_value=0.2, max_value=20.0, value=5.0, 
                             help="Smaller values = finer mesh (slower but more accurate)")
+        # Default reference material (not used but needed for variable scope)
+        ref_material = main_material
     
     # Only proceed if main file is uploaded
     if uploaded_file is not None:
@@ -119,55 +129,83 @@ def get_custom_profile():
                 with open(main_tmp_path, 'wb') as f:
                     f.write(uploaded_file.getbuffer())
                 
-                # Create main geometry with selected material
-                main_geom = Geometry.from_dxf(dxf_filepath=main_tmp_path)
-                main_geom.material = DEFAULT_MATERIALS[main_material]
-                
-                # Initialize compound geometry with main section
-                compound_geom = CompoundGeometry([main_geom])
-                
-                # Add reinforcement sections if any
-                for i, (reinf_file, reinf_mat) in enumerate(zip(reinforcement_files, reinforcement_materials)):
-                    reinf_tmp_path = os.path.join(tmp_dir, f"reinf_{i}.dxf")
-                    with open(reinf_tmp_path, 'wb') as f:
-                        f.write(reinf_file.getbuffer())
+                # Handle different geometry types based on reinforcement flag
+                if add_reinforcement and reinforcement_files:
+                    # === COMPOUND SECTION WITH REINFORCEMENT ===
+                    # Create main geometry with selected material
+                    main_geom = Geometry.from_dxf(dxf_filepath=main_tmp_path)
+                    main_geom.material = DEFAULT_MATERIALS[main_material]
                     
-                    reinf_geom = Geometry.from_dxf(dxf_filepath=reinf_tmp_path)
-                    reinf_geom.material = DEFAULT_MATERIALS[reinf_mat]
+                    # Initialize compound geometry with main section
+                    compound_geom = CompoundGeometry([main_geom])
                     
-                    # Add to compound geometry
-                    compound_geom += reinf_geom
-                
-                # Get reference material object
-                ref_material_obj = DEFAULT_MATERIALS[ref_material]
-                
-                # Rotate compound geometry 90 degrees clockwise for mullion view
-                compound_geom = compound_geom.rotate_section(angle=-90)
-                
-                # Create mesh with specified size
-                compound_geom.create_mesh(mesh_sizes=mesh_size)
-                
-                # Create section and calculate properties
-                sec = Section(geometry=compound_geom)
-                sec.calculate_geometric_properties()
-                sec.calculate_plastic_properties()
-                
-                # Get transformed properties using reference material's elastic modulus
-                # After 90° rotation, what was Iyy is now the major axis (Ixx)
-                ixx, iyy, ixy = sec.get_eic(e_ref=ref_material_obj)
-                
-                # Get elastic moduli with reference material
-                try:
-                    # After rotation, zxx values are now major axis
-                    zxx_plus, zxx_minus, zyy_plus, zyy_minus = sec.get_ez(e_ref=ref_material_obj)
-                    section_modulus = min(zyy_plus, zyy_minus)  # Conservative value
-                except (ValueError, TypeError) as e:
-                    st.warning(f"Could not calculate section moduli: {str(e)}")
-                    section_modulus = 0
+                    # Add reinforcement sections if any
+                    for i, (reinf_file, reinf_mat) in enumerate(zip(reinforcement_files, reinforcement_materials)):
+                        reinf_tmp_path = os.path.join(tmp_dir, f"reinf_{i}.dxf")
+                        with open(reinf_tmp_path, 'wb') as f:
+                            f.write(reinf_file.getbuffer())
+                        
+                        reinf_geom = Geometry.from_dxf(dxf_filepath=reinf_tmp_path)
+                        reinf_geom.material = DEFAULT_MATERIALS[reinf_mat]
+                        
+                        # Add to compound geometry
+                        compound_geom += reinf_geom
+                    
+                    # Get reference material object
+                    ref_material_obj = DEFAULT_MATERIALS[ref_material]
+                    
+                    # Rotate compound geometry 90 degrees clockwise for mullion view
+                    compound_geom = compound_geom.rotate_section(angle=-90)
+                    
+                    # Create mesh with specified size
+                    compound_geom.create_mesh(mesh_sizes=mesh_size)
+                    
+                    # Create section and calculate properties
+                    sec = Section(geometry=compound_geom)
+                    sec.calculate_geometric_properties()
+                    sec.calculate_plastic_properties()
+                    
+                    # === COMPOUND SECTION PROPERTIES ===
+                    # Get transformed properties using reference material's elastic modulus
+                    # After 90° rotation, what was Iyy is now the major axis (Ixx)
+                    ixx, iyy, ixy = sec.get_eic(e_ref=ref_material_obj)
+                    
+                    # Get elastic moduli with reference material
+                    try:
+                        # After rotation, zxx values are now major axis
+                        zxx_plus, zxx_minus, zyy_plus, zyy_minus = sec.get_ez(e_ref=ref_material_obj)
+                        section_modulus = min(zxx_plus, zxx_minus)  # Conservative value
+                    except (ValueError, TypeError) as e:
+                        st.warning(f"Could not calculate section moduli: {str(e)}")
+                        section_modulus = 0
+                    
+                    # Display material information
+                    material_info = f"Main: {main_material.capitalize()}"
+                    if reinforcement_files:
+                        material_info += f", Reinforcements: {', '.join(m.capitalize() for m in set(reinforcement_materials))}"
+                    st.write(f"Reference Material: {ref_material.capitalize()}")
+                    st.write(material_info)
+                    
+                else:
+                    # === SINGLE SECTION WITHOUT REINFORCEMENT ===
+                    # Load and rotate geometry
+                    geom = Geometry.from_dxf(dxf_filepath=main_tmp_path)
+                    geom = geom.rotate_section(angle=-90)  # Clockwise rotation for mullion view
+                    geom.create_mesh(mesh_sizes=mesh_size)
+                    sec = Section(geometry=geom)
+                    sec.calculate_geometric_properties()
+                    
+                    # === STANDARD SECTION PROPERTIES ===
+                    # Get properties for rotated section (-90° rotation swaps axes)
+                    ixx, iyy, ixy = sec.get_ic()  # Standard moment of inertia calculation
+                    
+                    # Get standard section moduli
+                    zxx_plus, zxx_minus, zyy_plus, zyy_minus = sec.get_z()
+                    section_modulus = min(zxx_plus, zxx_minus)  # Conservative value
                 
                 # Update data with converted units (mm⁴ → cm⁴, mm³ → cm³)
                 custom_data.update({
-                    "I": iyy / 1e4,  # mm⁴ → cm⁴ (major axis after rotation)
+                    "I": ixx / 1e4,  # mm⁴ → cm⁴ (major axis after rotation)
                     "Z": section_modulus / 1e3  # mm³ → cm³ (major axis after rotation)
                 })
                 
@@ -188,14 +226,6 @@ def get_custom_profile():
                     st.metric("Moment of Inertia (Ixx)", f"{custom_data['I']:.2f} cm⁴")
                 with col2:
                     st.metric("Section Modulus (Zxx)", f"{custom_data['Z']:.2f} cm³")
-                
-                # Display material information
-                st.write("**Materials Used:**")
-                material_info = f"Main: {main_material.capitalize()}"
-                if reinforcement_files:
-                    material_info += f", Reinforcements: {', '.join(m.capitalize() for m in set(reinforcement_materials))}"
-                st.write(f"Reference Material: {ref_material.capitalize()}")
-                st.write(material_info)
                 
         except Exception as e:
             st.error(f"Processing Error: {str(e)}")
