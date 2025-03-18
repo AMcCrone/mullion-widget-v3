@@ -123,6 +123,14 @@ with col3:
     st.download_button("Download Utilisation PDF", data=pdf_util, file_name="3D_Utilisation.pdf", mime="application/pdf")
 
 # ---------------------------
+# Load Cases
+# ---------------------------
+
+st.title("Load Cases")
+with st.expander("Check for the critical Load Case", expanded=True):
+    st.markdown("The load cases will be outlined here...")
+
+# ---------------------------
 # Section Database Table
 # ---------------------------
 df_raw, df_display = generate_section_database(
