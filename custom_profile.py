@@ -230,7 +230,7 @@ def get_custom_profile():
                     ref_material_obj = DEFAULT_MATERIALS[ref_material]
                     
                     # Rotate compound geometry 90 degrees clockwise for mullion view
-                    # compound_geom = compound_geom.rotate_section(angle=-90)
+                    compound_geom = compound_geom.rotate_section(angle=-90)
                     
                     # Create mesh with specified size
                     compound_geom.create_mesh(mesh_sizes=mesh_size)
@@ -265,7 +265,7 @@ def get_custom_profile():
                     # === SINGLE SECTION WITHOUT REINFORCEMENT ===
                     # Load and rotate geometry
                     geom = Geometry.from_dxf(dxf_filepath=main_tmp_path)
-                    # geom = geom.rotate_section(angle=-90)  # Clockwise rotation for mullion view
+                    geom = geom.rotate_section(angle=-90)  # Clockwise rotation for mullion view
                     geom.create_mesh(mesh_sizes=mesh_size)
                     sec = Section(geometry=geom)
                     sec.calculate_geometric_properties()
@@ -284,13 +284,22 @@ def get_custom_profile():
                     "Z": section_modulus / 1e3  # mm³ → cm³ (major axis after rotation)
                 })
                 
-                # Create landscape plot
+                # Create landscape plot with adjusted axes
                 fig, ax = plt.subplots(figsize=(10, 5))  # Wider aspect ratio
+                
+                # Plot the mesh
                 sec.plot_mesh(ax=ax)
+                
+                # Modify plot to match rotated view
                 ax.set_title(f"Finite Element Mesh Plot of {custom_data['name']} Cross Section")
                 ax.set_aspect("equal")
+                
+                # Swap x and y labels to reflect rotated orientation
                 ax.set_xlabel("Height")
                 ax.set_ylabel("Width")
+                
+                # Optional: Adjust axis limits if needed
+                # ax.invert_xaxis()  # Uncomment if you need to flip the x-axis
                 
                 st.pyplot(fig)
                 
@@ -298,9 +307,9 @@ def get_custom_profile():
                 st.write("**Structural Properties:**")
                 col1, col2 = st.columns(2)
                 with col1:
-                    st.metric("Moment of Inertia (I)", f"{custom_data['I']:.2f} cm⁴")
+                    st.metric("Moment of Inertia (Ixx)", f"{custom_data['I']:.2f} cm⁴")
                 with col2:
-                    st.metric("Section Modulus (Z)", f"{custom_data['Z']:.2f} cm³")
+                    st.metric("Section Modulus (Zxx)", f"{custom_data['Z']:.2f} cm³")
                 
         except Exception as e:
             st.error(f"Processing Error: {str(e)}")
