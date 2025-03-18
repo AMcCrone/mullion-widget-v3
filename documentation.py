@@ -3,7 +3,7 @@ import streamlit as st
 def render_documentation():
     st.markdown("The following text describes the documentation, limitations, and formulae used in the creation of this **Mullion Check Widget**")
 
-   st.header("Material Properties")
+    st.header("Material Properties")
 
     st.subheader("Steel")
     st.latex(r"f_y = 355 \text{ MPa}, \quad E = 210000 \text{ MPa}")
