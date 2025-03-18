@@ -113,7 +113,7 @@ with st.expander("Custom Profile?", expanded=False):
         from custom_profile import get_custom_profile
         
         # Call the function and pass the material from the sidebar
-        custom_section_data = get_custom_profile(material=plot_material)
+        custom_section_data = get_custom_profile()
 
 use_custom_section = custom_section_data.get("type") in ["manual", "dxf"]
 
