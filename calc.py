@@ -60,8 +60,8 @@ def generate_plots(
         Wyy_vals = np.append(Wyy_vals, custom_section_data["Z"] * 1000)  # cm³ -> mm³
         Iyy_vals = np.append(Iyy_vals, custom_section_data["I"] * 10000)   # cm⁴ -> mm⁴
         profiles = np.append(profiles, custom_section_data["name"])
-        # Set a default reinforcement flag (e.g., True) and supplier "Custom"
-        reinf = np.append(reinf, True)
+        # Set a default no-reinforcement flag and supplier "Custom"
+        reinf = np.append(reinf, False)
         supps = np.append(supps, "Custom")
         available_cm3 = np.append(available_cm3, custom_section_data["Z"])
 
@@ -70,7 +70,7 @@ def generate_plots(
     uls_colors = []
     for i, passed in enumerate(uls_passed):
         if i == len(uls_passed) - 1 and use_custom_section:
-            uls_colors.append(TT_Purple if passed else 'darkred')
+            uls_colors.append(TT_DarkBlue if passed else TT_Orange)
         else:
             uls_colors.append('seagreen' if passed else 'darkred')
     uls_symbols = ['square' if r else 'circle' for r in reinf]
