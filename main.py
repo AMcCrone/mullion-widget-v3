@@ -130,9 +130,9 @@ with col3:
 st.title("Load Cases")
 with st.expander("Check for the critical Load Case", expanded=True):
     st.markdown("The load cases will be outlined here...")
+    # Display the tables
+    display_load_case_tables(wind_pressure, bay_width, mullion_length, selected_barrier_load)
 
-# Display the tables
-display_load_case_tables(wind_pressure, bay_width, mullion_length, selected_barrier_load)
 
 # ---------------------------
 # Section Database Table
