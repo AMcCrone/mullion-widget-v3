@@ -146,7 +146,7 @@ def generate_plots(
     sls_colors = []
     for i in valid:
         if i == len(uls_passed) - 1 and use_custom_section:
-            sls_colors.append(TT_Purple if defl_values[i] <= defl_limit else 'darkred')
+            sls_colors.append(TT_DarkBlue if defl_values[i] <= defl_limit else TT_Orange)
         else:
             sls_colors.append('seagreen' if defl_values[i] <= defl_limit else 'darkred')
     sls_fig = go.Figure()
@@ -207,9 +207,9 @@ def generate_plots(
     colors_3d = []
     for i in range(len(safe_suppliers)):
         if safe_suppliers[i] == "Custom" and use_custom_section:
-            colors_3d.append(TT_Purple)
+            colors_3d.append(TT_DarkBlue)
         else:
-            colors_3d.append('#1f77b4')
+            colors_3d.append(TT_MidBlue)
     if len(uls_util) > 0:
         d_arr = np.sqrt(np.array(uls_util)**2 + np.array(sls_util)**2)
         sizes = 10 + (d_arr / np.sqrt(2)) * 20
