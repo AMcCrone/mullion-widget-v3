@@ -25,7 +25,7 @@ st.markdown("Find your one in a mullion ❤️")
 # ---------------------------
 # Sidebar: Settings & Data Input
 # ---------------------------
-st.sidebar.header("Settings")
+st.sidebar.header("Inputs")
 plot_material = st.sidebar.selectbox("Select Material", options=["Aluminium", "Steel"], index=0)
 
 # Read the Excel file (using a relative path)
@@ -46,6 +46,9 @@ selected_suppliers = st.sidebar.multiselect(
     options=sorted(df_selected["Supplier"].unique()),
     default=sorted(df_selected["Supplier"].unique())
 )
+bay_width = st.sidebar.slider("Bay Width (mm)", 500, 10000, 3000, 250)
+mullion_length = st.sidebar.slider("Mullion Length (mm)", 2500, 12000, 4000, 250)
+wind_pressure = st.sidebar.slider("Wind Pressure (kPa)", 0.1, 5.0, 1.0, 0.1)
 barrier_load_option = st.sidebar.radio(
     "Barrier Load (kN/m)", options=["None", "0.74", "1.5", "3"], index=0
 )
@@ -66,9 +69,6 @@ view_3d_option = st.sidebar.radio(
     options=["Isometric: Overview", "XY Plane: Utilisation", "XZ Plane: Section Depth"],
     index=0
 )
-wind_pressure = st.sidebar.slider("Wind Pressure (kPa)", 0.1, 5.0, 1.0, 0.1)
-bay_width = st.sidebar.slider("Bay Width (mm)", 500, 10000, 3000, 250)
-mullion_length = st.sidebar.slider("Mullion Length (mm)", 2500, 12000, 4000, 250)
 
 # In main.py
 with st.expander("Custom Profile?", expanded=False):
