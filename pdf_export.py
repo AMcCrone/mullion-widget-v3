@@ -20,10 +20,10 @@ def get_pdf_bytes(fig):
 def create_pdf_report(
     wind_pressure, bay_width, mullion_length, selected_barrier_load,
     ULS_case, SLS_case, plot_material, Z_req_cm3, I_req_cm4, defl_limit,
-    selected_df, selected_indices=None
+    selected_df, selected_indices=None, uls_df=None, sls_df=None
 ):
     """
-    Create a PDF report with the design inputs, requirements, and selected sections
+    Create a PDF report with the design inputs, requirements, load cases, and selected sections
     
     Parameters:
     -----------
@@ -51,6 +51,10 @@ def create_pdf_report(
         Dataframe containing section data
     selected_indices : list, optional
         List of indices for selected sections from the dataframe
+    uls_df : pandas.DataFrame, optional
+        DataFrame with ULS load case information
+    sls_df : pandas.DataFrame, optional
+        DataFrame with SLS load case information
         
     Returns:
     --------
@@ -121,14 +125,42 @@ def create_pdf_report(
         ["Bay Width", f"{bay_width} mm"],
         ["Mullion Length", f"{mullion_length} mm"],
         ["Barrier Load", f"{selected_barrier_load:.2f} kN/m"],
-        ["ULS Load Case", ULS_case],
-        ["SLS Load Case", SLS_case]
+        ["Current ULS Load Case", ULS_case],
+        ["Current SLS Load Case", SLS_case]
     ]
     
     t = Table(data, colWidths=[doc.width/2.5, doc.width/2.5])
     t.setStyle(table_style)
     elements.append(t)
     elements.append(Spacer(1, 10*mm))
+    
+    # ULS Load cases table 
+    if uls_df is not None:
+        elements.append(Paragraph("Ultimate Limit State (ULS) Load Cases", heading_style))
+        
+        # Prepare ULS table data
+        uls_table_data = [uls_df.columns.tolist()]
+        for _, row in uls_df.iterrows():
+            uls_table_data.append(row.tolist())
+        
+        uls_table = Table(uls_table_data, colWidths=[doc.width/4, doc.width/4, doc.width/4])
+        uls_table.setStyle(table_style)
+        elements.append(uls_table)
+        elements.append(Spacer(1, 10*mm))
+    
+    # SLS Load cases table
+    if sls_df is not None:
+        elements.append(Paragraph("Serviceability Limit State (SLS) Load Cases", heading_style))
+        
+        # Prepare SLS table data
+        sls_table_data = [sls_df.columns.tolist()]
+        for _, row in sls_df.iterrows():
+            sls_table_data.append(row.tolist())
+        
+        sls_table = Table(sls_table_data, colWidths=[doc.width/4, doc.width/4, doc.width/4])
+        sls_table.setStyle(table_style)
+        elements.append(sls_table)
+        elements.append(Spacer(1, 10*mm))
     
     # Design requirements table
     elements.append(Paragraph("Design Requirements", heading_style))
@@ -254,17 +286,23 @@ def export_section_report(
     # Convert to cm⁴
     I_req_cm4 = I_req / 10000
     
+    # Generate load case tables
+    from load_cases import generate_load_case_tables
+    uls_df, sls_df = generate_load_case_tables(
+        wind_pressure, bay_width, mullion_length, selected_barrier_load
+    )
+    
     # Generate PDF report
     return create_pdf_report(
         wind_pressure, bay_width, mullion_length, selected_barrier_load,
         ULS_case, SLS_case, plot_material, Z_req_cm3, I_req_cm4, defl_limit,
-        df_display, selected_indices
+        df_display, selected_indices, uls_df, sls_df
     )
 
 def generate_pdf_download_button(
     wind_pressure, bay_width, mullion_length, selected_barrier_load,
     ULS_case, SLS_case, plot_material, Z_req_cm3, defl_limit,
-    df_display, selected_indices=None
+    df_display, selected_sections=None
 ):
     """
     Generate a Streamlit download button for PDF report export
@@ -272,12 +310,40 @@ def generate_pdf_download_button(
     Parameters:
     -----------
     Same as export_section_report
+    selected_sections : list or None
+        The indices of sections selected by the user
     
     Returns:
     --------
     Streamlit download button
     """
     import streamlit as st
+    
+    # Create section selection multi-select
+    section_options = []
+    for idx, row in df_display.iterrows():
+        uls_status = "✅" if row["ULS Util. (%)"] <= 100 else "❌"
+        sls_status = "✅" if row["SLS Util. (%)"] <= 100 else "❌"
+        label = f"{row['Supplier']}: {row['Profile Name']} - {row['Depth']} mm (ULS: {uls_status}, SLS: {sls_status})"
+        section_options.append((idx, label))
+    
+    # Default to selecting passing sections
+    default_indices = []
+    for idx, row in df_display.iterrows():
+        if row["ULS Util. (%)"] <= 100 and row["SLS Util. (%)"] <= 100:
+            default_indices.append(idx)
+    
+    if len(default_indices) > 5:
+        default_indices = default_indices[:5]
+    
+    # Allow user to select sections for the report
+    st.subheader("Select Sections for Report")
+    selected_indices = st.multiselect(
+        "Choose sections to include in the PDF report:",
+        options=[idx for idx, _ in section_options],
+        default=default_indices,
+        format_func=lambda x: next((label for idx, label in section_options if idx == x), "Unknown")
+    )
     
     # Create the PDF bytes
     pdf_bytes = export_section_report(
@@ -292,5 +358,5 @@ def generate_pdf_download_button(
         data=pdf_bytes,
         file_name="mullion_design_report.pdf",
         mime="application/pdf",
-        help="Download a comprehensive design report in PDF format"
+        help="Download a design report in PDF format"
     )
