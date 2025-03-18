@@ -1,7 +1,7 @@
 import numpy as np
 import pandas as pd
 import plotly.graph_objects as go
-from config import TT_LightBlue, TT_DarkBlue, TT_MidBlue, TT_Grey, TT_Purple, material_props, BARRIER_LENGTH
+from config import TT_LightBlue, TT_Orange, TT_DarkBlue, TT_MidBlue, TT_Grey, TT_Purple, material_props, BARRIER_LENGTH
 
 def generate_plots(
     wind_pressure, bay_width, mullion_length, selected_barrier_load,
