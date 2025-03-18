@@ -6,6 +6,7 @@ from sectionproperties.pre import Material
 from sectionproperties.pre.geometry import Geometry, CompoundGeometry
 from sectionproperties.analysis import Section
 import matplotlib.pyplot as plt
+from config import TT_LightBlue, TT_MidBlue
 
 
 # def get_custom_profile():
@@ -184,12 +185,12 @@ def get_custom_profile():
                 index=0
             )
         with col2:
-            mesh_size = st.slider("Mesh Size", min_value=0.2, max_value=20.0, value=5.0, step=1.0, 
+            mesh_size = st.slider("Mesh Size", min_value=1.0, max_value=20.0, value=5.0, step=1.0, 
                                 help="Smaller values = finer mesh (slower but more accurate)")
     else:
         # Still need mesh size for single section
         st.subheader("Analysis Settings")
-        mesh_size = st.slider("Mesh Size", min_value=0.2, max_value=20.0, value=5.0, step=1.0, 
+        mesh_size = st.slider("Mesh Size", min_value=1.0, max_value=20.0, value=5.0, step=1.0, 
                             help="Smaller values = finer mesh (slower but more accurate)")
         # Default reference material (not used but needed for variable scope)
         ref_material = main_material
