@@ -322,7 +322,7 @@ def generate_section_database(
     
     # Create display dataframe with formatted columns
     df_display = df_sorted.copy()
-    df_display["Section Modulus (cm³)"] = (df_display["Wyy"] / 1000).round(2)
+    df_display["Z (cm³)"] = (df_display["Wyy"] / 1000).round(2)
     df_display["I (cm⁴)"] = (df_display["Iyy"] / 10000).round(2)
     df_display["ULS Util. (%)"] = (df_display["ULS Utilisation"] * 100).round(1)
     df_display["SLS Util. (%)"] = (df_display["SLS Utilisation"] * 100).round(1)
