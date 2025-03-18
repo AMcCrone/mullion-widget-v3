@@ -11,6 +11,7 @@ from documentation import render_documentation
 from custom_profile import get_custom_profile
 import matplotlib.pyplot as plt
 from sectionproperties.analysis.section import Section
+from load_cases import display_load_case_tables
 
 # ---------------------------
 # Authentication & Page Config
