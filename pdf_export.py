@@ -168,7 +168,7 @@ def create_pdf_report(
         df_to_show = selected_df.iloc[selected_indices]
     
     # Create table header
-    headers = ["Supplier", "Profile Name", "Depth (mm)", "Section Modulus (cm³)", 
+    headers = ["Supplier", "Profile Name", "Depth (mm)", "Z (cm³)", 
                "I (cm⁴)", "ULS Util. (%)", "SLS Util. (%)"]
     
     data = [headers]
@@ -179,7 +179,7 @@ def create_pdf_report(
             row["Supplier"],
             row["Profile Name"],
             f"{row['Depth']:.1f}",
-            f"{row['Section Modulus (cm³)']:.2f}",
+            f"{row['Z (cm³)']:.2f}",
             f"{row['I (cm⁴)']:.2f}",
             f"{row['ULS Util. (%)']:.1f}",
             f"{row['SLS Util. (%)']:.1f}"
