@@ -184,12 +184,12 @@ def get_custom_profile():
                 index=0
             )
         with col2:
-            mesh_size = st.slider("Mesh Size", min_value=0.2, max_value=20.0, value=5.0, 
+            mesh_size = st.slider("Mesh Size", min_value=0.2, max_value=20.0, value=5.0, step=1.0, 
                                 help="Smaller values = finer mesh (slower but more accurate)")
     else:
         # Still need mesh size for single section
         st.subheader("Analysis Settings")
-        mesh_size = st.slider("Mesh Size", min_value=0.2, max_value=20.0, value=5.0, 
+        mesh_size = st.slider("Mesh Size", min_value=0.2, max_value=20.0, value=5.0, step=1.0, 
                             help="Smaller values = finer mesh (slower but more accurate)")
         # Default reference material (not used but needed for variable scope)
         ref_material = main_material
@@ -249,7 +249,7 @@ def get_custom_profile():
                     try:
                         # After rotation, zxx values are now major axis
                         zxx_plus, zxx_minus, zyy_plus, zyy_minus = sec.get_ez(e_ref=ref_material_obj)
-                        section_modulus = min(zxx_plus, zxx_minus)  # Conservative value
+                        section_modulus = min(zyy_plus, zyy_minus)  # Conservative value
                     except (ValueError, TypeError) as e:
                         st.warning(f"Could not calculate section moduli: {str(e)}")
                         section_modulus = 0
@@ -276,11 +276,11 @@ def get_custom_profile():
                     
                     # Get standard section moduli
                     zxx_plus, zxx_minus, zyy_plus, zyy_minus = sec.get_z()
-                    section_modulus = min(zxx_plus, zxx_minus)  # Conservative value
+                    section_modulus = min(zyy_plus, zyy_minus)  # Conservative value
                 
                 # Update data with converted units (mm⁴ → cm⁴, mm³ → cm³)
                 custom_data.update({
-                    "I": ixx / 1e4,  # mm⁴ → cm⁴ (major axis after rotation)
+                    "I": iyy / 1e4,  # mm⁴ → cm⁴ (major axis after rotation)
                     "Z": section_modulus / 1e3  # mm³ → cm³ (major axis after rotation)
                 })
                 
