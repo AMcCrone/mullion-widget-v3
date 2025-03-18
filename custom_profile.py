@@ -230,7 +230,7 @@ def get_custom_profile():
                     ref_material_obj = DEFAULT_MATERIALS[ref_material]
                     
                     # Rotate compound geometry 90 degrees clockwise for mullion view
-                    compound_geom = compound_geom.rotate_section(angle=-90)
+                    # compound_geom = compound_geom.rotate_section(angle=-90)
                     
                     # Create mesh with specified size
                     compound_geom.create_mesh(mesh_sizes=mesh_size)
@@ -249,7 +249,7 @@ def get_custom_profile():
                     try:
                         # After rotation, zxx values are now major axis
                         zxx_plus, zxx_minus, zyy_plus, zyy_minus = sec.get_ez(e_ref=ref_material_obj)
-                        section_modulus = min(zyy_plus, zyy_minus)  # Conservative value
+                        section_modulus = min(zxx_plus, zxx_minus)  # Conservative value
                     except (ValueError, TypeError) as e:
                         st.warning(f"Could not calculate section moduli: {str(e)}")
                         section_modulus = 0
@@ -276,11 +276,11 @@ def get_custom_profile():
                     
                     # Get standard section moduli
                     zxx_plus, zxx_minus, zyy_plus, zyy_minus = sec.get_z()
-                    section_modulus = min(zyy_plus, zyy_minus)  # Conservative value
+                    section_modulus = min(zxx_plus, zxx_minus)  # Conservative value
                 
                 # Update data with converted units (mm⁴ → cm⁴, mm³ → cm³)
                 custom_data.update({
-                    "I": iyy / 1e4,  # mm⁴ → cm⁴ (major axis after rotation)
+                    "I": ixx / 1e4,  # mm⁴ → cm⁴ (major axis after rotation)
                     "Z": section_modulus / 1e3  # mm³ → cm³ (major axis after rotation)
                 })
                 
