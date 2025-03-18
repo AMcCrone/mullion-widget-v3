@@ -109,6 +109,10 @@ with st.expander("Custom Profile?", expanded=False):
         custom_section_data = {"type": "manual", "name": name, "depth": depth, "Z": Z, "I": I}
     
     elif custom_option == "Import DXF":
+        # Import the function from your custom_profile.py
+        from custom_profile import get_custom_profile
+        
+        # Call the function which now handles compound sections internally
         custom_section_data = get_custom_profile()
 
 use_custom_section = custom_section_data.get("type") in ["manual", "dxf"]
