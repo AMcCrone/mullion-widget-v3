@@ -327,7 +327,7 @@ def generate_section_database(
     df_display["ULS Util. (%)"] = (df_display["ULS Utilisation"] * 100).round(1)
     df_display["SLS Util. (%)"] = (df_display["SLS Utilisation"] * 100).round(1)
     
-    display_columns = ["Supplier", "Profile Name", "Depth", "Section Modulus (cm³)", "I (cm⁴)", 
+    display_columns = ["Supplier", "Profile Name", "Depth", "Z (cm³)", "I (cm⁴)", 
                        "ULS Util. (%)", "SLS Util. (%)"]
     df_display = df_display[display_columns]
     
