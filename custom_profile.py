@@ -174,7 +174,7 @@ def get_custom_profile():
                     try:
                         # After rotation, zxx values are now major axis
                         zxx_plus, zxx_minus, zyy_plus, zyy_minus = sec.get_ez(e_ref=ref_material_obj)
-                        section_modulus = min(zxx_plus, zxx_minus)  # Conservative value
+                        section_modulus = min(zyy_plus, zyy_minus)  # Conservative value
                     except (ValueError, TypeError) as e:
                         st.warning(f"Could not calculate section moduli: {str(e)}")
                         section_modulus = 0
@@ -201,11 +201,11 @@ def get_custom_profile():
                     
                     # Get standard section moduli
                     zxx_plus, zxx_minus, zyy_plus, zyy_minus = sec.get_z()
-                    section_modulus = min(zxx_plus, zxx_minus)  # Conservative value
+                    section_modulus = min(zyy_plus, zyy_minus)  # Conservative value
                 
                 # Update data with converted units (mm⁴ → cm⁴, mm³ → cm³)
                 custom_data.update({
-                    "I": ixx / 1e4,  # mm⁴ → cm⁴ (major axis after rotation)
+                    "I": iyy / 1e4,  # mm⁴ → cm⁴ (major axis after rotation)
                     "Z": section_modulus / 1e3  # mm³ → cm³ (major axis after rotation)
                 })
                 
