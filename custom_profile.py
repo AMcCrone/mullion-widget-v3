@@ -83,7 +83,7 @@ import matplotlib.pyplot as plt
 #     return custom_data
 
 def get_custom_profile():
-    """Process DXF without rotation for calculation but rotate for mullion visualization"""
+    """Process DXF with proper 90° rotation for mullion visualization and compound geometry support"""
     from sectionproperties.pre import Material
     from sectionproperties.pre.geometry import Geometry, CompoundGeometry
     
@@ -229,7 +229,9 @@ def get_custom_profile():
                     # Get reference material object
                     ref_material_obj = DEFAULT_MATERIALS[ref_material]
                     
-                    # No rotation for calculation - use original geometry
+                    # Rotate compound geometry 90 degrees clockwise for mullion view
+                    compound_geom = compound_geom.rotate_section(angle=-90)
+                    
                     # Create mesh with specified size
                     compound_geom.create_mesh(mesh_sizes=mesh_size)
                     
@@ -240,14 +242,14 @@ def get_custom_profile():
                     
                     # === COMPOUND SECTION PROPERTIES ===
                     # Get transformed properties using reference material's elastic modulus
-                    # Using original orientation - Iyy is the major axis
+                    # After 90° rotation, what was Iyy is now the major axis (Ixx)
                     ixx, iyy, ixy = sec.get_eic(e_ref=ref_material_obj)
                     
                     # Get elastic moduli with reference material
                     try:
-                        # In original orientation - zyy values are the major axis
+                        # After rotation, zxx values are now major axis
                         zxx_plus, zxx_minus, zyy_plus, zyy_minus = sec.get_ez(e_ref=ref_material_obj)
-                        section_modulus = min(zyy_plus, zyy_minus)  # Conservative value for MAJOR axis
+                        section_modulus = min(zxx_plus, zxx_minus)  # Conservative value
                     except (ValueError, TypeError) as e:
                         st.warning(f"Could not calculate section moduli: {str(e)}")
                         section_modulus = 0
@@ -261,42 +263,30 @@ def get_custom_profile():
                     
                 else:
                     # === SINGLE SECTION WITHOUT REINFORCEMENT ===
-                    # Load geometry WITHOUT rotation
+                    # Load and rotate geometry
                     geom = Geometry.from_dxf(dxf_filepath=main_tmp_path)
+                    geom = geom.rotate_section(angle=-90)  # Clockwise rotation for mullion view
                     geom.create_mesh(mesh_sizes=mesh_size)
                     sec = Section(geometry=geom)
                     sec.calculate_geometric_properties()
                     
                     # === STANDARD SECTION PROPERTIES ===
-                    # Get properties for original orientation
+                    # Get properties for rotated section (-90° rotation swaps axes)
                     ixx, iyy, ixy = sec.get_ic()  # Standard moment of inertia calculation
                     
                     # Get standard section moduli
                     zxx_plus, zxx_minus, zyy_plus, zyy_minus = sec.get_z()
-                    section_modulus = min(zyy_plus, zyy_minus)  # Conservative value for MAJOR axis
+                    section_modulus = min(zxx_plus, zxx_minus)  # Conservative value
                 
                 # Update data with converted units (mm⁴ → cm⁴, mm³ → cm³)
-                # Use iyy for the major axis (vertical axis in original orientation)
                 custom_data.update({
-                    "I": iyy / 1e4,  # mm⁴ → cm⁴ (major axis)
-                    "Z": section_modulus / 1e3  # mm³ → cm³ (major axis)
+                    "I": ixx / 1e4,  # mm⁴ → cm⁴ (major axis after rotation)
+                    "Z": section_modulus / 1e3  # mm³ → cm³ (major axis after rotation)
                 })
                 
-                # Create landscape plot with rotation ONLY for visualization
+                # Create landscape plot
                 fig, ax = plt.subplots(figsize=(10, 5))  # Wider aspect ratio
-                
-                # Create a copy of the geometry for plotting purposes only
-                if add_reinforcement and reinforcement_files:
-                    plot_geom = compound_geom.rotate_section(angle=-90)
-                else:
-                    plot_geom = geom.rotate_section(angle=-90)
-                
-                # Create a new section with the rotated geometry just for plotting
-                plot_sec = Section(geometry=plot_geom)
-                plot_sec.calculate_geometric_properties()
-                
-                # Plot the rotated geometry
-                plot_sec.plot_mesh(ax=ax)
+                sec.plot_mesh(ax=ax)
                 ax.set_title(f"Finite Element Mesh Plot of {custom_data['name']} Cross Section")
                 ax.set_aspect("equal")
                 ax.set_xlabel("Height")
