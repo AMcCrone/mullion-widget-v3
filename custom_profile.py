@@ -7,18 +7,17 @@ from sectionproperties.pre.geometry import Geometry, CompoundGeometry
 from sectionproperties.analysis import Section
 import matplotlib.pyplot as plt
 
-def get_custom_profile():
-    """Process DXF with proper 90° rotation for mullion visualization and compound geometry support"""
+def get_custom_profile(material):
+    """Process DXF with proper 90° rotation for mullion visualization and compound geometry support
     
-    # Manually ask for material selection instead of referencing plot_material
-    material_selection = st.selectbox(
-        "Select Material",
-        ["Aluminium", "Steel"],
-        index=0
-    )
+    Parameters:
+    material (str): Material name ('Aluminium' or 'Steel') to use for all sections
+    """
+    from sectionproperties.pre import Material
+    from sectionproperties.pre.geometry import Geometry, CompoundGeometry
     
-    # Convert selection to lowercase for matching with material dictionary
-    material_name = material_selection.lower()
+    # Convert material name to lowercase for dictionary lookup
+    material_name = material.lower()
     
     # Define materials
     DEFAULT_MATERIALS = {
@@ -101,16 +100,6 @@ def get_custom_profile():
     mesh_size = st.slider("Mesh Size", min_value=0.2, max_value=20.0, value=5.0, 
                         help="Smaller values = finer mesh (slower but more accurate)")
     
-    # Manually ask for section properties material (can be different from profile material)
-    st.subheader("Section Properties Material")
-    properties_material_selection = st.selectbox(
-        "Select Material for Section Properties Calculation",
-        ["Aluminium", "Steel"],
-        index=0,
-        help="This material will be used for section properties calculations"
-    )
-    properties_material_name = properties_material_selection.lower()
-    
     # Only proceed if main file is uploaded
     if uploaded_file is not None:
         try:
@@ -135,7 +124,7 @@ def get_custom_profile():
                         f.write(reinf_file.getbuffer())
                     
                     reinf_geom = Geometry.from_dxf(dxf_filepath=reinf_tmp_path)
-                    # Use the selected material for reinforcements
+                    # Use the same material for reinforcements as the main material
                     reinf_geom.material = DEFAULT_MATERIALS[material_name]
                     
                     # Add to compound geometry
@@ -152,14 +141,14 @@ def get_custom_profile():
                 sec.calculate_geometric_properties()
                 sec.calculate_plastic_properties()
                 
-                # Get transformed properties using the properties material
+                # Get transformed properties using the same material
                 # After 90° rotation, what was Iyy is now the major axis (Ixx)
-                ixx, iyy, ixy = sec.get_eic(e_ref=DEFAULT_MATERIALS[properties_material_name])
+                ixx, iyy, ixy = sec.get_eic(e_ref=DEFAULT_MATERIALS[material_name])
                 
                 # Get elastic moduli with reference material
                 try:
                     # After rotation, zxx values are now major axis
-                    zxx_plus, zxx_minus, zyy_plus, zyy_minus = sec.get_ez(e_ref=DEFAULT_MATERIALS[properties_material_name])
+                    zxx_plus, zxx_minus, zyy_plus, zyy_minus = sec.get_ez(e_ref=DEFAULT_MATERIALS[material_name])
                     section_modulus = min(zxx_plus, zxx_minus)  # Conservative value
                 except (ValueError, TypeError) as e:
                     st.warning(f"Could not calculate section moduli: {str(e)}")
@@ -190,8 +179,7 @@ def get_custom_profile():
                     st.metric("Section Modulus (Zxx)", f"{custom_data['Z']:.2f} cm³")
                 
                 # Display material information
-                st.write(f"**Profile Material:** {material_selection}")
-                st.write(f"**Properties Calculation Material:** {properties_material_selection}")
+                st.write(f"**Material:** {material}")
                 st.write(f"**Number of reinforcement sections:** {len(reinforcement_files)}")
                 
         except Exception as e:
