@@ -265,7 +265,7 @@ def get_custom_profile():
                     # === SINGLE SECTION WITHOUT REINFORCEMENT ===
                     # Load and rotate geometry
                     geom = Geometry.from_dxf(dxf_filepath=main_tmp_path)
-                    geom = geom.rotate_section(angle=-90)  # Clockwise rotation for mullion view
+                    # geom = geom.rotate_section(angle=-90)  # Clockwise rotation for mullion view
                     geom.create_mesh(mesh_sizes=mesh_size)
                     sec = Section(geometry=geom)
                     sec.calculate_geometric_properties()
