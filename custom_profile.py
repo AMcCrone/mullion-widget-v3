@@ -6,7 +6,6 @@ from sectionproperties.pre import Material
 from sectionproperties.pre.geometry import Geometry, CompoundGeometry
 from sectionproperties.analysis import Section
 import matplotlib.pyplot as plt
-from main import plot_material
 
 def get_custom_profile():
     """Process DXF with proper 90° rotation for mullion visualization and compound geometry support"""
