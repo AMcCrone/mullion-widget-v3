@@ -86,7 +86,7 @@ with st.expander("Custom Profile?", expanded=False):
          with col2:
              depth = st.number_input("Section Depth (mm)", min_value=50.0, max_value=500.0, value=150.0, step=1.0)
          with col3:
-             Z = st.number_input("Section Modulus (cm³)", min_value=1.0, max_value=1000.0, value=50.0, step=1.0)
+             Z = st.number_input("Z (cm³)", min_value=1.0, max_value=1000.0, value=50.0, step=1.0)
          with col4:
              I = st.number_input("Moment of Inertia (cm⁴)", min_value=1.0, max_value=10000.0, value=500.0, step=1.0)
          custom_section_data = {"type": "manual", "name": name, "depth": depth, "Z": Z, "I": I}
