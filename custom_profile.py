@@ -289,7 +289,7 @@ def get_custom_profile():
                 fig, ax = plt.subplots(figsize=(10, 5))  # Wider aspect ratio
                 
                 # Plot the mesh
-                sec.plot_mesh(ax=ax)
+                sec.plot_centroids(ax=ax)
                 
                 # Modify plot to match rotated view
                 ax.set_title(f"Finite Element Mesh Plot of {custom_data['name']} Cross Section")
