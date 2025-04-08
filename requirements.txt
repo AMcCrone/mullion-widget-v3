@@ -7,5 +7,5 @@ kaleido
 reportlab
 PyPDF2
 sectionproperties>=3.0.0
-cad_to_shapely=0.3.2
+cad_to_shapely==0.3.2
 matplotlib
