@@ -47,7 +47,7 @@ selected_suppliers = st.sidebar.multiselect(
     default=sorted(df_selected["Supplier"].unique())
 )
 
-bay_width = st.sidebar.slider("Bay Width (mm)", 500, 10000, 3000, 250)
+bay_width = st.sidebar.slider("Bay Width (mm)", 500, 10000, 3000, 100)
 mullion_length = st.sidebar.slider("Mullion Length (mm)", 2500, 12000, 4000, 250)
 wind_pressure = st.sidebar.slider("Wind Pressure (kPa)", 0.1, 5.0, 1.0, 0.1)
 barrier_load_option = st.sidebar.radio(
