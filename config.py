@@ -17,7 +17,7 @@ TT_Purple = "rgb(128,0,128)"
 # Material properties
 material_props = {
     "Aluminium": {"fy": 160, "E": 70000},
-    "Steel": {"fy": 355, "E": 210000}
+    "Steel": {"fy": 275, "E": 210000}
 }
 
 # Constant: Barrier Length (mm)
