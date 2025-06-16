@@ -288,6 +288,9 @@ def generate_section_database(
             "Wyy": [custom_section_data["Z"] * 1000]       # cm³ to mm³
         })
         df_mat = pd.concat([df_mat, custom_row], ignore_index=True)
+
+    df_mat["Iyy"] = pd.to_numeric(df_mat["Iyy"], errors="raise")
+    df_mat["Wyy"] = pd.to_numeric(df_mat["Wyy"], errors="raise")
     
     # Calculate ULS utilisation as the ratio of required section modulus to available modulus.
     df_mat["ULS Utilisation"] = Z_req_cm3 / (df_mat["Wyy"] / 1000)
